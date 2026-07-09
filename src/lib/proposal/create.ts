@@ -99,8 +99,14 @@ export function buildInitialProposalData(
       ? (() => {
           const c = catalog.find((p) => p.category === "charger");
           if (!c) return { merk: "DC", type: "Lader", prijs: 0 };
-          const { merk, type } = specsFromProduct(c);
-          return { merk, type, prijs: sellCents(c.costPrice, c.margin), photoUrl: c.photoUrl ?? undefined };
+          const { merk, type, specs } = specsFromProduct(c);
+          return {
+            merk,
+            type,
+            vermogen: specs.vermogen || undefined,
+            prijs: sellCents(c.costPrice, c.margin),
+            photoUrl: c.photoUrl ?? undefined,
+          };
         })()
       : undefined;
 
@@ -139,7 +145,8 @@ export function buildInitialProposalData(
 
   // Cost inputs for the internal margin view (real catalog costs).
   const batteryInvestCost = batteryProducts.map((p) => p.costPrice);
-  const sharedCost = sharedInvestering(deriveSharedCosts(catalog, investering));
+  const chargerCost = charger ? costFromSell(charger.prijs, 15) : 0;
+  const sharedCost = sharedInvestering(deriveSharedCosts(catalog, investering)) + chargerCost;
 
   return { data, costInputs: { batteryInvestCost, sharedCost } };
 }

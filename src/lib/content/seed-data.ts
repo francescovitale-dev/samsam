@@ -167,6 +167,18 @@ export const SEED_CATALOG: SeedProduct[] = [
   { name: "AC Werkzaamheden (stelpost)", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.ac), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
   { name: "Extra BPM t.b.v. batterij (optioneel)", category: "option", costPrice: costFromSell(eur(SEED_INVESTERING.bpm), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
   { name: "EMS – SmartBox Power", category: "ems", costPrice: costFromSell(eur(SEED_INVESTERING.ems), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
+  {
+    name: "Alfen DC 60kW",
+    category: "charger",
+    costPrice: costFromSell(eur(10000), DEFAULT_MARGIN),
+    margin: DEFAULT_MARGIN,
+    unit: "st",
+    specs: {
+      cooling: "", capaciteit: "", dod: "", vermogen: "60 kW", crate: "", cycli: "", eol: "",
+      totaalkwh: "", rte: "", garantieCellen: "", garantiePCS: "", garantieOverige: "",
+      balans: "", levensduur: "", bouwkwaliteit: "", sterren: 0,
+    },
+  },
 ];
 
 // ---- Example proposal (the prototype's "Voorbeeld") ------------------------

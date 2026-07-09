@@ -11,8 +11,8 @@ import { ProposalDocument, type DocSettings } from "@/components/proposal/propos
 import type { BatteryOption, ProposalData, TemplateType } from "@/lib/proposal/types";
 import { BATTERY_SPEC_FIELDS } from "@/lib/proposal/spec-fields";
 import { statusLabel, statusClass } from "@/lib/status";
-import { saveProposal } from "../actions";
-import { ChevronLeft, FileDown, Save, Calculator, ZoomIn, ZoomOut } from "lucide-react";
+import { saveProposal, setProposalStatus, duplicateProposal, deleteProposal } from "../actions";
+import { ChevronLeft, FileDown, Save, Calculator, ZoomIn, ZoomOut, Copy, Trash2 } from "lucide-react";
 
 // ---- small field helpers ---------------------------------------------------
 
@@ -93,6 +93,7 @@ export function ProposalBuilder({
   const [dirty, setDirty] = useState(false);
   const [zoom, setZoom] = useState(0.55);
   const [pending, start] = useTransition();
+  const [curStatus, setCurStatus] = useState(status);
 
   function update(mut: (d: ProposalData) => void) {
     setData((prev) => {
@@ -122,9 +123,21 @@ export function ProposalBuilder({
           <ChevronLeft className="size-4" /> Terug
         </Button>
         <span className="font-mono text-sm font-medium">{number}</span>
-        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass(status)}`}>
-          {statusLabel(status)}
-        </span>
+        <select
+          value={curStatus}
+          onChange={(e) => {
+            const v = e.target.value;
+            setCurStatus(v);
+            start(async () => {
+              await setProposalStatus(proposalId, v);
+            });
+          }}
+          className={`rounded-full border-0 px-2.5 py-0.5 text-xs font-medium ${statusClass(curStatus)}`}
+        >
+          <option value="draft">{statusLabel("draft")}</option>
+          <option value="accepted">{statusLabel("accepted")}</option>
+          <option value="rejected">{statusLabel("rejected")}</option>
+        </select>
         {dirty && <span className="text-xs text-amber-600">• niet opgeslagen</span>}
         <div className="ml-auto flex items-center gap-2">
           <Button render={<Link href={`/offerte/${proposalId}/intern`} />} variant="outline" size="sm" className="gap-1">
@@ -146,6 +159,21 @@ export function ProposalBuilder({
           >
             <Save className="size-4" /> {pending ? "Bezig…" : "Opslaan"}
           </Button>
+          <form action={duplicateProposal.bind(null, proposalId)}>
+            <Button type="submit" variant="ghost" size="icon-sm" title="Dupliceren">
+              <Copy className="size-4" />
+            </Button>
+          </form>
+          <form
+            action={deleteProposal.bind(null, proposalId)}
+            onSubmit={(e) => {
+              if (!confirm("Deze offerte verwijderen?")) e.preventDefault();
+            }}
+          >
+            <Button type="submit" variant="ghost" size="icon-sm" className="text-destructive" title="Verwijderen">
+              <Trash2 className="size-4" />
+            </Button>
+          </form>
         </div>
       </div>
 

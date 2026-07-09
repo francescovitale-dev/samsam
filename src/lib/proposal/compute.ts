@@ -33,10 +33,13 @@ export function sharedInvestering(inv: InvesteringLines): number {
  */
 export function computeTotals(data: ProposalData, costs?: CostInputs): ProposalTotals {
   const shared = sharedInvestering(data.investering);
+  // The DC-lader (battery_charger template) is part of the one-time investment.
+  const chargerPrice =
+    data.templateType === "battery_charger" && data.charger ? data.charger.prijs : 0;
   const cols = data.batteries.slice(0, data.cols);
 
   const columns: ColumnTotals[] = cols.map((b, i) => {
-    const exclBTW = b.prijsInvest + shared;
+    const exclBTW = b.prijsInvest + shared + chargerPrice;
     const btw = Math.round((exclBTW * data.btwRate) / 100);
     const inclBTW = exclBTW + btw;
     const capacityKwh = parseKwh(b.specs.capaciteit);

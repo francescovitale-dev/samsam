@@ -68,12 +68,12 @@ export function proposalCss(accent: string, teal: string): string {
 
 /* battery comparison */
 .samsam-doc .cmp{width:100%;border-collapse:collapse;background:var(--panel);border-radius:12px;overflow:hidden;}
-.samsam-doc .cmp th,.samsam-doc .cmp td{padding:6px 8px;font-size:11px;text-align:center;}
+.samsam-doc .cmp th,.samsam-doc .cmp td{padding:4px 8px;font-size:11px;text-align:center;}
 .samsam-doc .cmp td.lbl,.samsam-doc .cmp th.lbl{text-align:left;font-weight:500;color:#444;}
 .samsam-doc .cmp tr{border-bottom:1px solid #e2e5ea;}
 .samsam-doc .cmp .merk td{font-weight:800;font-size:13px;padding-top:10px;color:var(--ink);}
 .samsam-doc .cmp .photos td{padding:8px 0;background:#fff;}
-.samsam-doc .cmp .photos img{height:104px;object-fit:contain;}
+.samsam-doc .cmp .photos img{height:84px;object-fit:contain;}
 .samsam-doc .stars{color:var(--lime);letter-spacing:2px;font-size:15px;}
 .samsam-doc .prijsbar{
   background:linear-gradient(90deg,var(--bar),#4b5560);color:#fff;display:grid;border-radius:0 0 12px 12px;margin-top:2px;

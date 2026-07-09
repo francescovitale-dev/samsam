@@ -88,3 +88,43 @@ export async function saveProposal(id: string, dataJson: string) {
   revalidatePath("/");
   return { ok: true };
 }
+
+const ALLOWED_STATUS = ["draft", "accepted", "rejected"];
+
+export async function setProposalStatus(id: string, status: string) {
+  await requireUser();
+  if (!ALLOWED_STATUS.includes(status)) return { ok: false };
+  await prisma.proposal.update({ where: { id }, data: { status } });
+  revalidatePath("/");
+  revalidatePath(`/offerte/${id}`);
+  return { ok: true };
+}
+
+export async function duplicateProposal(id: string) {
+  await requireUser();
+  const src = await prisma.proposal.findUnique({ where: { id } });
+  if (!src) redirect("/");
+  const number = await nextProposalNumber();
+  const copy = await prisma.proposal.create({
+    data: {
+      number,
+      customerId: src.customerId,
+      templateType: src.templateType,
+      design: src.design,
+      status: "draft",
+      validityDays: src.validityDays,
+      data: src.data as object,
+      totals: src.totals as object,
+      events: { create: { type: "created", meta: { duplicatedFrom: src.number } } },
+    },
+  });
+  revalidatePath("/");
+  redirect(`/offerte/${copy.id}`);
+}
+
+export async function deleteProposal(id: string) {
+  await requireUser();
+  await prisma.proposal.delete({ where: { id } });
+  revalidatePath("/");
+  redirect("/?deleted=1");
+}

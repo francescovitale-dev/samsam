@@ -18,9 +18,9 @@ function headlineTotal(totals: unknown): string {
 export default async function Dashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; deleted?: string }>;
 }) {
-  const { q, status } = await searchParams;
+  const { q, status, deleted } = await searchParams;
 
   const proposals = await prisma.proposal.findMany({
     where: {
@@ -38,7 +38,7 @@ export default async function Dashboard({
     orderBy: { createdAt: "desc" },
   });
 
-  const statuses = ["", "draft", "sent", "viewed", "signed"];
+  const statuses = ["", "draft", "accepted", "rejected"];
 
   return (
     <div className="space-y-6">
@@ -56,6 +56,10 @@ export default async function Dashboard({
           <Plus className="size-4" /> Nieuwe offerte
         </Button>
       </div>
+
+      {deleted && (
+        <div className="mb-4 rounded-lg bg-emerald-50 px-4 py-2 text-sm text-emerald-700">Offerte verwijderd.</div>
+      )}
 
       <form className="flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-56">

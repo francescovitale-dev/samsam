@@ -256,9 +256,25 @@ export function ProposalDocument({
           ))}
         </div>
         {isCharger && data.charger && (
-          <div className="sidebox">
-            <b>Inclusief DC-lader — {data.charger.merk} {data.charger.type}</b>
-            {data.charger.vermogen ? ` (${data.charger.vermogen})` : ""} — {formatEur(data.charger.prijs)}
+          <div
+            className="mt"
+            style={{
+              marginTop: 10,
+              padding: "8px 14px",
+              borderRadius: 10,
+              background: "var(--teal)",
+              color: "#fff",
+              fontSize: 11,
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 10,
+            }}
+          >
+            <span>
+              <b>Inclusief DC-lader</b> — {data.charger.merk} {data.charger.type}
+              {data.charger.vermogen ? ` (${data.charger.vermogen})` : ""}
+            </span>
+            <b>{formatEur(data.charger.prijs)}</b>
           </div>
         )}
         <div className="panel mt" style={{ fontSize: 11 }}>

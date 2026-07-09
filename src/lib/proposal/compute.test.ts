@@ -33,6 +33,17 @@ describe("computeTotals — acceptance criteria (§13)", () => {
     expect(formatEur2(c.pricePerKwhCents)).toBe("€ 358,86");
   });
 
+  it("adds the DC-lader price to the total for the battery_charger template", () => {
+    const charged = buildExampleProposalData();
+    charged.templateType = "battery_charger";
+    charged.charger = { merk: "Alfen", type: "DC 60kW", prijs: 1_000_000 }; // € 10.000
+    charged.cols = 1;
+    const t = computeTotals(charged);
+    // € 77.155 + € 10.000 = € 87.155
+    expect(formatEur(t.columns[0].exclBTW)).toBe("€ 87.155");
+    expect(t.columns[0].exclBTW).toBe(8_715_500);
+  });
+
   it("derives internal gross margin when cost inputs are supplied", () => {
     const batteryInvestCost = data.batteries
       .slice(0, data.cols)

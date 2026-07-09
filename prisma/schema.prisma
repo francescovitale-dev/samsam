@@ -1,0 +1,151 @@
+// SamSam Offerte — data model
+// Money is stored as integer euro-cents everywhere; format nl-NL only at display.
+// See src/lib/proposal/* for the canonical ProposalData shape + computeTotals().
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Auth.js (NextAuth v5) adapter models
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  emailVerified DateTime?
+  image         String?
+  role          String    @default("member") // member | admin
+  createdAt     DateTime  @default(now())
+
+  accounts Account[]
+  sessions Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------------------------------------------------------------------------
+// Application models
+// ---------------------------------------------------------------------------
+
+/// Singleton (id = 1). Company branding + editable fixed copy + defaults.
+model Setting {
+  id            Int      @id @default(1)
+  company       Json // { name, tagline, address1, address2, kvk, btwNr, iban, contact, email, phone, web }
+  logoUrl       String?
+  accent        String   @default("#9EC63F")
+  teal          String   @default("#5BA99B")
+  defaultMargin Float    @default(15)
+  btwRate       Float    @default(21)
+  fixedCopy     Json // the FIX object: letter, marketing pages, payment terms, conditions
+  updatedAt     DateTime @updatedAt
+}
+
+/// Catalog. The single source of truth for costs, margins and battery specs.
+model Product {
+  id        String   @id @default(cuid())
+  name      String
+  category  String // battery | work | ems | option | charger
+  costPrice Int // euro-cents
+  margin    Float // percent, e.g. 15
+  unit      String   @default("st")
+  specs     Json? // battery spec sheet (see BatterySpecs in src/lib/proposal/types.ts)
+  photoUrl  String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  company   String
+  contact   String?
+  email     String?
+  phone     String?
+  address   Json? // { adres1, adres2 }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  proposals Proposal[]
+}
+
+model Proposal {
+  id           String   @id @default(cuid())
+  number       String   @unique
+  customerId   String
+  customer     Customer @relation(fields: [customerId], references: [id])
+  status       String   @default("draft") // draft|sent|viewed|signed|accepted|rejected|expired
+  templateType String   @default("battery") // battery | battery_charger
+  design       String   @default("modern")
+  date         DateTime @default(now())
+  validityDays Int      @default(14)
+
+  data   Json // snapshot: canonical ProposalData (customer block, batteries[] w/ specs+prices, line items, notes, btw)
+  totals Json // computeTotals() output snapshot (per-column exclBTW, btw, inclBTW, pricePerKwh, internal cost/margin)
+
+  pdfUrl        String?
+  publicToken   String    @unique @default(cuid())
+  sentAt        DateTime?
+  firstViewedAt DateTime?
+  signedAt      DateTime?
+  signature     Json? // { name, email, chosenIndex, signatureImgUrl, signedAt, ip, userAgent }
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  events ProposalEvent[]
+
+  @@index([status])
+  @@index([customerId])
+}
+
+model ProposalEvent {
+  id         String   @id @default(cuid())
+  proposalId String
+  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  type       String // created|sent|viewed|downloaded|signed
+  meta       Json?
+  at         DateTime @default(now())
+
+  @@index([proposalId])
+}

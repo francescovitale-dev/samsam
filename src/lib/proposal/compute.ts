@@ -4,19 +4,18 @@ import type {
   ProposalTotals,
   ColumnTotals,
   CostInputs,
-  InvesteringLines,
+  CostLines,
 } from "./types";
 
-/** Sum of the shared investering line items (everything except the battery price). */
-export function sharedInvestering(inv: InvesteringLines): number {
+/** Sum of the shared cost lines (everything except the battery price). */
+export function sharedInvestering(inv: CostLines): number {
   return (
     inv.transport +
-    inv.grondwerk +
-    inv.hekwerk +
-    inv.pgs +
+    inv.roef +
     inv.keuring +
+    inv.hekwerk +
+    inv.grondwerk +
     inv.ac +
-    inv.bpm +
     inv.ems
   );
 }

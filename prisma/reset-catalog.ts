@@ -12,8 +12,8 @@ const prisma = new PrismaClient({
 });
 
 async function main() {
-  const items = SEED_CATALOG.filter((p) => p.category === "battery" || p.category === "charger");
-  await prisma.product.deleteMany({ where: { category: { in: ["battery", "charger"] } } });
+  const items = SEED_CATALOG;
+  await prisma.product.deleteMany({});
   for (const p of items) {
     await prisma.product.create({
       data: {

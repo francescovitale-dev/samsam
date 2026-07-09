@@ -83,7 +83,6 @@ export function ProposalDocument({
   const bs = data.batteries.slice(0, data.cols);
   const totals = computeTotals(data);
   const inv = data.investering;
-  const w = data.werkzaamheden;
 
   return (
     <div
@@ -287,17 +286,16 @@ export function ProposalDocument({
       <section className="page">
         <Head s={s} pn={6} />
         <h2 className="sec-h">Overige werkzaamheden</h2>
-        <WorkItem title="Fundatie / Grondwerk" text={fix.fundatie} amt={`Stelpost ${formatEur(w.grondwerk)}`} partner={s.company.partner} />
-        <WorkItem title="Hekwerk / Brandmuur" text={fix.hekwerk} amt={formatEur(w.hekwerk)} partner={s.company.partner} />
-        <WorkItem title="PGS 37-1 Documenten" text={fix.pgs} amt={formatEur(w.pgs)} partner={s.company.partner} />
-        <WorkItem title="Keuring NEN-1010" text={fix.keuring} amt={formatEur(w.keuring)} partner={s.company.partner} />
+        <WorkItem title="Fundatie, grondwerk & ROEF" text={fix.fundatie} amt={`Stelpost ${formatEur(inv.roef + inv.grondwerk)}`} partner={s.company.partner} />
+        <WorkItem title="Hekwerk / Brandmuur" text={fix.hekwerk} amt={formatEur(inv.hekwerk)} partner={s.company.partner} />
+        <WorkItem title="Keuring NEN-1010" text={fix.keuring} amt={formatEur(inv.keuring)} partner={s.company.partner} />
       </section>
 
       {/* 7 — Werk 2 */}
       <section className="page">
         <Head s={s} pn={7} />
         <h2 className="sec-h">Overige werkzaamheden</h2>
-        <WorkItem title="AC Werkzaamheden" text={fix.ac} amt={`Stelpost ${formatEur(w.ac)}`} partner={s.company.partner} />
+        <WorkItem title="AC Werkzaamheden" text={fix.ac} amt={`Stelpost ${formatEur(inv.ac)}`} partner={s.company.partner} />
       </section>
 
       {/* 8 — EMS + Onderhoud */}
@@ -307,12 +305,11 @@ export function ProposalDocument({
         <WorkItem
           title="EMS – SmartBox Power"
           text={fix.ems}
-          amt={`Eenmalig ${formatEur(w.emsEenmalig)}`}
-          opt={`per maand ${formatEur(w.emsPerMaand)}`}
+          amt={`Eenmalig ${formatEur(inv.ems)}`}
           partner={s.company.partner}
         />
         <h2 className="sec-h mt">Onderhoud Opslagsysteem</h2>
-        <WorkItem title="Jaarlijks onderhoud" text={fix.onderhoud} amt={formatEur(w.onderhoud)} partner={s.company.partner} />
+        <WorkItem title="Jaarlijks onderhoud" text={fix.onderhoud} amt={`${formatEur(data.jaarlijks.onderhoudBss)} / jaar`} partner={s.company.partner} />
       </section>
 
       {/* 9 — Betaling */}
@@ -363,20 +360,15 @@ export function ProposalDocument({
             {isCharger && data.charger && (
               <RowShared label="DC-lader" cols={bs.length} value={formatEur(data.charger.prijs)} />
             )}
-            <RowShared label="Transportkosten en afval" cols={bs.length} value={formatEur(inv.transport)} />
-            <GroupRow cols={bs.length}>Fundatie en grondwerkzaamheden</GroupRow>
-            <RowShared label="– Grondwerkzaamheden / ROEF verhogingsbalken" cols={bs.length} value={formatEur(inv.grondwerk)} />
-            <GroupRow cols={bs.length}>Hekwerk en Brandscheiding</GroupRow>
-            <RowShared label="– Dubbelstaafmat hekwerk incl. loopdeuren / brandwering" cols={bs.length} value={formatEur(inv.hekwerk)} />
-            <GroupRow cols={bs.length}>PGS 37-1</GroupRow>
-            <RowShared label="– Opstellen benodigde documenten" cols={bs.length} value={formatEur(inv.pgs)} />
-            <GroupRow cols={bs.length}>Keuring NEN-1010</GroupRow>
-            <RowShared label="– Uitvoering keuring batterijsysteem" cols={bs.length} value={formatEur(inv.keuring)} />
-            <GroupRow cols={bs.length}>AC Werkzaamheden</GroupRow>
-            <RowShared label="– Uitvoeren AC werkzaamheden (stelpost)" cols={bs.length} value={formatEur(inv.ac)} />
-            <RowShared label="– Plaatsen extra BPM t.b.v. batterij (optioneel)" cols={bs.length} value={formatEur(inv.bpm)} />
-            <GroupRow cols={bs.length}>EMS</GroupRow>
-            <RowShared label="– Smartbox Power" cols={bs.length} value={formatEur(inv.ems)} />
+            <GroupRow cols={bs.length}>Standaard</GroupRow>
+            <RowShared label="– Transportkosten en afval" cols={bs.length} value={formatEur(inv.transport)} />
+            <RowShared label="– Fundatie / ROEF verhogingsbalken" cols={bs.length} value={formatEur(inv.roef)} />
+            <RowShared label="– Keuring NEN-1010" cols={bs.length} value={formatEur(inv.keuring)} />
+            <GroupRow cols={bs.length}>Optioneel</GroupRow>
+            <RowShared label="– Hekwerk / brandvertragende betonwering" cols={bs.length} value={formatEur(inv.hekwerk)} />
+            <RowShared label="– Grondwerkzaamheden" cols={bs.length} value={formatEur(inv.grondwerk)} />
+            <RowShared label="– AC werkzaamheden (stelpost)" cols={bs.length} value={formatEur(inv.ac)} />
+            <RowShared label="– EMS system (SmartBox Power)" cols={bs.length} value={formatEur(inv.ems)} />
             <tr className="tot">
               <td>Totaal Excl. BTW</td>
               <td></td>
@@ -445,16 +437,22 @@ export function ProposalDocument({
               </td>
             </tr>
             <tr>
-              <td>Onderhoud batterijopslag conform PGS 37-1</td>
+              <td>
+                Onderhoud batterijopslag (BSS)
+                {` — ${data.jaarlijks.bssConfig === "MW" ? "per MW" : `${data.jaarlijks.bssConfig} unit(s)`}`}
+              </td>
               <td className="num" style={{ textAlign: "center" }}>
-                {formatEur(data.jaarlijks.onderhoud)}
+                {formatEur(data.jaarlijks.onderhoudBss)}
               </td>
             </tr>
-            {isCharger && data.charger && (
+            {isCharger && (
               <tr>
-                <td>Onderhoud DC-lader</td>
+                <td>
+                  Onderhoud DC-lader
+                  {` — ${data.jaarlijks.laderType === "double" ? "Double" : "Single"} × ${data.jaarlijks.laderCount}`}
+                </td>
                 <td className="num" style={{ textAlign: "center" }}>
-                  {formatEur(0)}
+                  {formatEur(data.jaarlijks.onderhoudLader)}
                 </td>
               </tr>
             )}

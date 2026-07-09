@@ -101,25 +101,15 @@ export const SEED_BATTERIES: SeedBattery[] = [
 // ---- Shared line items (euros) ---------------------------------------------
 
 export const SEED_INVESTERING = {
+  // standaard
   transport: 1200,
-  grondwerk: 2950,
+  roef: 2950,
+  keuring: 1100,
+  // optioneel
   hekwerk: 2145,
-  pgs: 1650,
-  keuring: 1100,
-  ac: 9500,
-  bpm: 1210, // optioneel
-  ems: 4000,
-};
-
-export const SEED_WERK = {
   grondwerk: 2750,
-  hekwerk: 2700,
-  pgs: 1650,
-  keuring: 1100,
   ac: 9500,
-  onderhoud: 1000,
-  emsEenmalig: 4000,
-  emsPerMaand: 80,
+  ems: 4000,
 };
 
 export const SEED_JAARLIJKS = { ems: 960, onderhoud: 1000 };
@@ -199,12 +189,11 @@ export const SEED_CATALOG: SeedProduct[] = [
     specs: catalogSpecs(b.merk, `${b.vermogen}kW - ${b.capaciteit}`, b.vermogen, b.capaciteit),
   })),
   { name: "Transportkosten en afval", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.transport), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
-  { name: "Fundatie / Grondwerk (stelpost)", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.grondwerk), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
-  { name: "Hekwerk / Brandmuur", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.hekwerk), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
-  { name: "PGS 37-1 Documenten", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.pgs), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
+  { name: "ROEF verhogingsbalken", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.roef), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
   { name: "Keuring NEN-1010", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.keuring), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
+  { name: "Hekwerk / brandvertragende betonwering", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.hekwerk), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
+  { name: "Grondwerk (stelpost)", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.grondwerk), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
   { name: "AC Werkzaamheden (stelpost)", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.ac), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
-  { name: "Extra BPM t.b.v. batterij (optioneel)", category: "option", costPrice: costFromSell(eur(SEED_INVESTERING.bpm), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
   { name: "EMS – SmartBox Power", category: "ems", costPrice: costFromSell(eur(SEED_INVESTERING.ems), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
   ...REAL_CHARGERS.map((c) => ({
     name: `${c.merk} ${c.vermogen}kW`,
@@ -234,25 +223,21 @@ export function buildExampleProposalData(): ProposalData {
     cols: 3,
     investering: {
       transport: eur(SEED_INVESTERING.transport),
-      grondwerk: eur(SEED_INVESTERING.grondwerk),
-      hekwerk: eur(SEED_INVESTERING.hekwerk),
-      pgs: eur(SEED_INVESTERING.pgs),
+      roef: eur(SEED_INVESTERING.roef),
       keuring: eur(SEED_INVESTERING.keuring),
+      hekwerk: eur(SEED_INVESTERING.hekwerk),
+      grondwerk: eur(SEED_INVESTERING.grondwerk),
       ac: eur(SEED_INVESTERING.ac),
-      bpm: eur(SEED_INVESTERING.bpm),
       ems: eur(SEED_INVESTERING.ems),
     },
-    werkzaamheden: {
-      grondwerk: eur(SEED_WERK.grondwerk),
-      hekwerk: eur(SEED_WERK.hekwerk),
-      pgs: eur(SEED_WERK.pgs),
-      keuring: eur(SEED_WERK.keuring),
-      ac: eur(SEED_WERK.ac),
-      onderhoud: eur(SEED_WERK.onderhoud),
-      emsEenmalig: eur(SEED_WERK.emsEenmalig),
-      emsPerMaand: eur(SEED_WERK.emsPerMaand),
+    jaarlijks: {
+      ems: eur(SEED_JAARLIJKS.ems),
+      onderhoudBss: eur(SEED_JAARLIJKS.onderhoud),
+      bssConfig: "1",
+      onderhoudLader: 0,
+      laderType: "single",
+      laderCount: "1",
     },
-    jaarlijks: { ems: eur(SEED_JAARLIJKS.ems), onderhoud: eur(SEED_JAARLIJKS.onderhoud) },
     btwRate: 21,
   };
 }

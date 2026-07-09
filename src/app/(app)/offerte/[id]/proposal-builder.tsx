@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { ProposalDocument, type DocSettings } from "@/components/proposal/proposal-document";
 import type { BatteryOption, ProposalData, TemplateType } from "@/lib/proposal/types";
 import { BATTERY_SPEC_FIELDS } from "@/lib/proposal/spec-fields";
@@ -390,54 +389,75 @@ export function ProposalBuilder({
             </Section>
           )}
 
-          <Section title="Investering (prijstabel)">
+          <Section title="Investering (prijstabel)" open>
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal">Standaard</p>
             <div className="grid grid-cols-2 gap-2">
               <Money label="Transport en afval" cents={data.investering.transport} onCents={(v) => update((d) => (d.investering.transport = v))} />
-              <Money label="Grondwerk / ROEF" cents={data.investering.grondwerk} onCents={(v) => update((d) => (d.investering.grondwerk = v))} />
-              <Money label="Hekwerk" cents={data.investering.hekwerk} onCents={(v) => update((d) => (d.investering.hekwerk = v))} />
-              <Money label="PGS 37-1" cents={data.investering.pgs} onCents={(v) => update((d) => (d.investering.pgs = v))} />
-              <Money label="Keuring" cents={data.investering.keuring} onCents={(v) => update((d) => (d.investering.keuring = v))} />
-              <Money label="AC (stelpost)" cents={data.investering.ac} onCents={(v) => update((d) => (d.investering.ac = v))} />
-              <Money label="BPM (optioneel)" cents={data.investering.bpm} onCents={(v) => update((d) => (d.investering.bpm = v))} />
-              <Money label="EMS Smartbox" cents={data.investering.ems} onCents={(v) => update((d) => (d.investering.ems = v))} />
+              <Money label="ROEF" cents={data.investering.roef} onCents={(v) => update((d) => (d.investering.roef = v))} />
+              <Money label="Keuring NEN-1010" cents={data.investering.keuring} onCents={(v) => update((d) => (d.investering.keuring = v))} />
             </div>
-          </Section>
-
-          <Section title="Werkzaamheden-pagina's">
+            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Optioneel</p>
             <div className="grid grid-cols-2 gap-2">
-              <Money label="Grondwerk (stelpost)" cents={data.werkzaamheden.grondwerk} onCents={(v) => update((d) => (d.werkzaamheden.grondwerk = v))} />
-              <Money label="Hekwerk" cents={data.werkzaamheden.hekwerk} onCents={(v) => update((d) => (d.werkzaamheden.hekwerk = v))} />
-              <Money label="PGS 37-1" cents={data.werkzaamheden.pgs} onCents={(v) => update((d) => (d.werkzaamheden.pgs = v))} />
-              <Money label="Keuring" cents={data.werkzaamheden.keuring} onCents={(v) => update((d) => (d.werkzaamheden.keuring = v))} />
-              <Money label="AC (stelpost)" cents={data.werkzaamheden.ac} onCents={(v) => update((d) => (d.werkzaamheden.ac = v))} />
-              <Money label="Jaarlijks onderhoud" cents={data.werkzaamheden.onderhoud} onCents={(v) => update((d) => (d.werkzaamheden.onderhoud = v))} />
-              <Money label="EMS eenmalig" cents={data.werkzaamheden.emsEenmalig} onCents={(v) => update((d) => (d.werkzaamheden.emsEenmalig = v))} />
-              <Money label="EMS per maand" cents={data.werkzaamheden.emsPerMaand} onCents={(v) => update((d) => (d.werkzaamheden.emsPerMaand = v))} />
+              <Money label="Hekwerk / betonwering" cents={data.investering.hekwerk} onCents={(v) => update((d) => (d.investering.hekwerk = v))} />
+              <Money label="Grondwerk" cents={data.investering.grondwerk} onCents={(v) => update((d) => (d.investering.grondwerk = v))} />
+              <Money label="AC (stelpost)" cents={data.investering.ac} onCents={(v) => update((d) => (d.investering.ac = v))} />
+              <Money label="EMS system" cents={data.investering.ems} onCents={(v) => update((d) => (d.investering.ems = v))} />
             </div>
           </Section>
 
           <Section title="Jaarlijkse kosten + BTW">
+            <Money label="EMS jaarlijks" cents={data.jaarlijks.ems} onCents={(v) => update((d) => (d.jaarlijks.ems = v))} />
             <div className="grid grid-cols-2 gap-2">
-              <Money label="EMS jaarlijks" cents={data.jaarlijks.ems} onCents={(v) => update((d) => (d.jaarlijks.ems = v))} />
-              <Money label="Onderhoud jaarlijks" cents={data.jaarlijks.onderhoud} onCents={(v) => update((d) => (d.jaarlijks.onderhoud = v))} />
               <div>
-                <Label>BTW %</Label>
-                <Input
-                  inputMode="decimal"
-                  value={String(data.btwRate)}
-                  onChange={(e) => update((d) => (d.btwRate = parseFloat(e.target.value.replace(",", ".")) || 0))}
-                />
+                <Label>Onderhoud BSS — aantal / MW</Label>
+                <select
+                  value={data.jaarlijks.bssConfig}
+                  onChange={(e) => update((d) => (d.jaarlijks.bssConfig = e.target.value as ProposalData["jaarlijks"]["bssConfig"]))}
+                  className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                >
+                  {["1", "2", "3", "4", "5", "MW"].map((o) => (
+                    <option key={o} value={o}>{o}</option>
+                  ))}
+                </select>
               </div>
+              <Money label="Onderhoud BSS (€/jaar)" cents={data.jaarlijks.onderhoudBss} onCents={(v) => update((d) => (d.jaarlijks.onderhoudBss = v))} />
             </div>
-          </Section>
-
-          <Section title="Notities (interne pagina 11)">
-            <Textarea
-              rows={4}
-              value={data.notes ?? ""}
-              onChange={(e) => update((d) => (d.notes = e.target.value))}
-              placeholder="Optionele opmerkingen op de jaarlijkse-kostenpagina"
-            />
+            {isCharger && (
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label>Lader</Label>
+                  <select
+                    value={data.jaarlijks.laderType}
+                    onChange={(e) => update((d) => (d.jaarlijks.laderType = e.target.value as ProposalData["jaarlijks"]["laderType"]))}
+                    className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                  >
+                    <option value="single">Single</option>
+                    <option value="double">Double</option>
+                  </select>
+                </div>
+                <div>
+                  <Label>Aantal</Label>
+                  <select
+                    value={data.jaarlijks.laderCount}
+                    onChange={(e) => update((d) => (d.jaarlijks.laderCount = e.target.value as ProposalData["jaarlijks"]["laderCount"]))}
+                    className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                  >
+                    {["1", "2", "3"].map((o) => (
+                      <option key={o} value={o}>{o}</option>
+                    ))}
+                  </select>
+                </div>
+                <Money label="Onderhoud lader (€/jaar)" cents={data.jaarlijks.onderhoudLader} onCents={(v) => update((d) => (d.jaarlijks.onderhoudLader = v))} />
+              </div>
+            )}
+            <div>
+              <Label>BTW %</Label>
+              <Input
+                inputMode="decimal"
+                value={String(data.btwRate)}
+                onChange={(e) => update((d) => (d.btwRate = parseFloat(e.target.value.replace(",", ".")) || 0))}
+              />
+            </div>
           </Section>
         </div>
 

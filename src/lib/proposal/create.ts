@@ -1,9 +1,5 @@
 import { sellCents, costFromSell, parseKwh } from "@/lib/money";
-import {
-  SEED_WERK,
-  SEED_JAARLIJKS,
-  SEED_INVESTERING,
-} from "@/lib/content/seed-data";
+import { SEED_JAARLIJKS, SEED_INVESTERING } from "@/lib/content/seed-data";
 import type { BatteryOption, BatterySpecs, CostInputs, ProposalData } from "./types";
 import { sharedInvestering } from "./compute";
 
@@ -117,13 +113,14 @@ export function buildInitialProposalData(
   const address = (customer.address as { adres1?: string; adres2?: string } | null) ?? {};
 
   const investering = {
+    // standaard
     transport: invValue(catalog, /transport/i, SEED_INVESTERING.transport),
-    grondwerk: invValue(catalog, /grondwerk|fundatie/i, SEED_INVESTERING.grondwerk),
-    hekwerk: invValue(catalog, /hekwerk/i, SEED_INVESTERING.hekwerk),
-    pgs: invValue(catalog, /pgs/i, SEED_INVESTERING.pgs),
+    roef: invValue(catalog, /roef/i, SEED_INVESTERING.roef),
     keuring: invValue(catalog, /keuring/i, SEED_INVESTERING.keuring),
+    // optioneel
+    hekwerk: invValue(catalog, /hekwerk/i, SEED_INVESTERING.hekwerk),
+    grondwerk: invValue(catalog, /grondwerk|fundatie/i, SEED_INVESTERING.grondwerk),
     ac: invValue(catalog, /ac werkzaamheden|^ac/i, SEED_INVESTERING.ac),
-    bpm: invValue(catalog, /bpm/i, SEED_INVESTERING.bpm),
     ems: invValue(catalog, /smartbox|ems/i, SEED_INVESTERING.ems),
   };
 
@@ -162,17 +159,14 @@ export function buildInitialProposalData(
     charger,
     cols,
     investering,
-    werkzaamheden: {
-      grondwerk: eur(SEED_WERK.grondwerk),
-      hekwerk: eur(SEED_WERK.hekwerk),
-      pgs: eur(SEED_WERK.pgs),
-      keuring: eur(SEED_WERK.keuring),
-      ac: eur(SEED_WERK.ac),
-      onderhoud: eur(SEED_WERK.onderhoud),
-      emsEenmalig: eur(SEED_WERK.emsEenmalig),
-      emsPerMaand: eur(SEED_WERK.emsPerMaand),
+    jaarlijks: {
+      ems: eur(SEED_JAARLIJKS.ems),
+      onderhoudBss: eur(SEED_JAARLIJKS.onderhoud),
+      bssConfig: "1",
+      onderhoudLader: 0,
+      laderType: "single",
+      laderCount: "1",
     },
-    jaarlijks: { ems: eur(SEED_JAARLIJKS.ems), onderhoud: eur(SEED_JAARLIJKS.onderhoud) },
     btwRate,
   };
 
@@ -192,12 +186,11 @@ function deriveSharedCosts(catalog: CatalogProduct[], inv: ProposalData["investe
   };
   return {
     transport: cost(/transport/i, inv.transport),
-    grondwerk: cost(/grondwerk|fundatie/i, inv.grondwerk),
-    hekwerk: cost(/hekwerk/i, inv.hekwerk),
-    pgs: cost(/pgs/i, inv.pgs),
+    roef: cost(/roef/i, inv.roef),
     keuring: cost(/keuring/i, inv.keuring),
+    hekwerk: cost(/hekwerk/i, inv.hekwerk),
+    grondwerk: cost(/grondwerk|fundatie/i, inv.grondwerk),
     ac: cost(/ac werkzaamheden|^ac/i, inv.ac),
-    bpm: cost(/bpm/i, inv.bpm),
     ems: cost(/smartbox|ems/i, inv.ems),
   };
 }

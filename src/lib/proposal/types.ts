@@ -57,33 +57,35 @@ export interface CustomerBlock {
   aanhef: string;
 }
 
-/** Line items shown in the "Eenmalige investering" table (client-facing sell prices). */
-export interface InvesteringLines {
+/**
+ * One-time cost lines (client-facing sell prices). Unified: the same values
+ * appear in the investering table AND the werkzaamheden pages.
+ * Split into standaard (always) and optioneel (may be 0).
+ */
+export interface CostLines {
+  // standaard
   transport: Money;
-  grondwerk: Money;
-  hekwerk: Money;
-  pgs: Money;
+  roef: Money;
   keuring: Money;
+  // optioneel
+  hekwerk: Money;
+  grondwerk: Money;
   ac: Money;
-  bpm: Money; // optional item
   ems: Money;
 }
 
-/** Amounts shown on the werkzaamheden (stelposten) pages — independent of the investering table. */
-export interface WerkzaamhedenLines {
-  grondwerk: Money;
-  hekwerk: Money;
-  pgs: Money;
-  keuring: Money;
-  ac: Money;
-  onderhoud: Money;
-  emsEenmalig: Money;
-  emsPerMaand: Money;
-}
+export type BssConfig = "1" | "2" | "3" | "4" | "5" | "MW";
+export type LaderType = "single" | "double";
+export type LaderCount = "1" | "2" | "3";
 
+/** Annual costs. Maintenance is configured (BSS units / lader setup) + a manual amount. */
 export interface JaarlijksLines {
-  ems: Money;
-  onderhoud: Money;
+  ems: Money; // EMS jaarlijks
+  onderhoudBss: Money;
+  bssConfig: BssConfig;
+  onderhoudLader: Money;
+  laderType: LaderType;
+  laderCount: LaderCount;
 }
 
 export interface ProposalData {
@@ -93,8 +95,7 @@ export interface ProposalData {
   batteries: BatteryOption[]; // 1..3
   charger?: ChargerOption; // present iff templateType === 'battery_charger'
   cols: 1 | 2 | 3;
-  investering: InvesteringLines;
-  werkzaamheden: WerkzaamhedenLines;
+  investering: CostLines;
   jaarlijks: JaarlijksLines;
   btwRate: number; // default 21
   notes?: string;

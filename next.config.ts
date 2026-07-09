@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
     "puppeteer-core",
     "@sparticuz/chromium",
   ],
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
+  },
 };
 
 export default nextConfig;

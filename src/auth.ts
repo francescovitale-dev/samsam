@@ -18,6 +18,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       from: process.env.EMAIL_FROM || "SamSam <offertes@samsam.nu>",
       maxAge: 24 * 60 * 60,
       async sendVerificationRequest({ identifier, url }) {
+        // Dev-only: mirror the latest magic link to a file so e2e tests can log in.
+        if (!process.env.RESEND_API_KEY && process.env.AUTH_DEV_LINK_FILE) {
+          try {
+            const { writeFile } = await import("node:fs/promises");
+            await writeFile(process.env.AUTH_DEV_LINK_FILE, url, "utf8");
+          } catch {
+            /* ignore */
+          }
+        }
         await sendEmail({
           to: identifier,
           subject: "Inloggen bij SamSam Offertes",

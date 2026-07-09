@@ -3,11 +3,28 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { getSettings } from "@/lib/settings";
-import { buildInitialProposalData, deriveCostInputsOnSave } from "@/lib/proposal/create";
+import {
+  buildInitialProposalData,
+  deriveCostInputsOnSave,
+  type OfferPreset,
+} from "@/lib/proposal/create";
 import { computeTotals } from "@/lib/proposal/compute";
-import type { CostInputs, ProposalData, TemplateType } from "@/lib/proposal/types";
+import type { CostInputs, ProposalData } from "@/lib/proposal/types";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+
+/** "Utrecht, maandag 27 oktober 2025" — the day the offer is made, in Dutch. */
+function todayPlaatsdatum(plaats = "Utrecht"): string {
+  const date = new Date().toLocaleDateString("nl-NL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  return `${plaats}, ${date}`;
+}
+
+const VALID_PRESETS: OfferPreset[] = ["battery_large", "battery_small", "battery_charger"];
 
 async function nextProposalNumber(): Promise<string> {
   const year = new Date().getFullYear();
@@ -24,7 +41,8 @@ async function nextProposalNumber(): Promise<string> {
 export async function createProposal(formData: FormData) {
   await requireUser();
   const customerId = String(formData.get("customerId") || "");
-  const templateType = (String(formData.get("templateType") || "battery") as TemplateType);
+  const presetInput = String(formData.get("preset") || "battery_large") as OfferPreset;
+  const preset = VALID_PRESETS.includes(presetInput) ? presetInput : "battery_large";
   const design = String(formData.get("design") || "modern");
   if (!customerId) redirect("/offerte/nieuw?error=customer");
 
@@ -38,9 +56,10 @@ export async function createProposal(formData: FormData) {
   const { data, costInputs } = buildInitialProposalData(
     customer,
     catalog,
-    templateType,
+    preset,
     design,
     settings.btwRate,
+    todayPlaatsdatum(),
   );
 
   const totals = { ...computeTotals(data, costInputs), costInputs };
@@ -50,7 +69,7 @@ export async function createProposal(formData: FormData) {
     data: {
       number,
       customerId,
-      templateType,
+      templateType: data.templateType,
       design,
       status: "draft",
       validityDays: 14,

@@ -59,13 +59,14 @@ export default async function NewProposalPage({
         </div>
 
         <div>
-          <Label htmlFor="templateType">Template</Label>
+          <Label htmlFor="preset">Template</Label>
           <select
-            id="templateType"
-            name="templateType"
+            id="preset"
+            name="preset"
             className="h-9 w-full rounded-md border bg-background px-2 text-sm"
           >
-            <option value="battery">Batterij</option>
+            <option value="battery_large">Batterij 241/261kWh</option>
+            <option value="battery_small">Batterij 100kWh</option>
             <option value="battery_charger">Batterij + lader</option>
           </select>
         </div>

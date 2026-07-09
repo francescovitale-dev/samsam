@@ -1,13 +1,22 @@
-import { sellCents, costFromSell } from "@/lib/money";
+import { sellCents, costFromSell, parseKwh } from "@/lib/money";
 import {
   SEED_WERK,
   SEED_JAARLIJKS,
   SEED_INVESTERING,
 } from "@/lib/content/seed-data";
-import type { BatteryOption, BatterySpecs, CostInputs, ProposalData, TemplateType } from "./types";
+import type { BatteryOption, BatterySpecs, CostInputs, ProposalData } from "./types";
 import { sharedInvestering } from "./compute";
 
 const eur = (n: number) => Math.round(n * 100);
+
+/**
+ * Offer presets shown in "Nieuwe offerte". The two battery lines preload
+ * catalog batteries by capacity; the charger line preloads a DC-lader.
+ */
+export type OfferPreset = "battery_large" | "battery_small" | "battery_charger";
+
+/** kWh threshold splitting the large (241/261 kWh) line from the small (100 kWh) line. */
+const LARGE_KWH_THRESHOLD = 150;
 
 export interface CatalogProduct {
   id: string;
@@ -73,11 +82,26 @@ function invValue(products: CatalogProduct[], match: RegExp, fallbackEuros: numb
 export function buildInitialProposalData(
   customer: CustomerLike,
   catalog: CatalogProduct[],
-  templateType: TemplateType,
+  preset: OfferPreset,
   design: string,
   btwRate: number,
+  plaatsdatum: string,
 ): { data: ProposalData; costInputs: CostInputs } {
-  const batteryProducts = catalog.filter((p) => p.category === "battery").slice(0, 3);
+  const templateType = preset === "battery_charger" ? "battery_charger" : "battery";
+
+  // Preload batteries by capacity line (falls back to all if the bucket is empty).
+  const allBatteries = catalog.filter((p) => p.category === "battery");
+  const isLarge = (p: CatalogProduct) =>
+    parseKwh(specsFromProduct(p).specs.capaciteit) >= LARGE_KWH_THRESHOLD;
+  let batteryProducts =
+    preset === "battery_small"
+      ? allBatteries.filter((p) => !isLarge(p))
+      : preset === "battery_large"
+        ? allBatteries.filter(isLarge)
+        : allBatteries;
+  if (batteryProducts.length === 0) batteryProducts = allBatteries;
+  batteryProducts = batteryProducts.slice(0, 3);
+
   const batteries = batteryProducts.map(productToBattery);
   const cols = (Math.min(Math.max(batteries.length, 1), 3) || 1) as 1 | 2 | 3;
 
@@ -117,13 +141,13 @@ export function buildInitialProposalData(
       naam: customer.company,
       adres1: address.adres1 ?? "",
       adres2: address.adres2 ?? "",
-      plaatsdatum: "",
+      plaatsdatum,
       referentie: customer.company,
       contact: customer.contact ?? "",
       email: customer.email ?? "",
       onderwerp: "Aanbieding energieopslag",
       geldigheid: "14 dagen",
-      aanhef: "",
+      aanhef: "Geachte heer/mevrouw,",
     },
     batteries,
     charger,

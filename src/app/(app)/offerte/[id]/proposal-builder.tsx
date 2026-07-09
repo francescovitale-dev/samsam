@@ -212,7 +212,21 @@ export function ProposalBuilder({
               <Text label="Postcode + plaats" value={c.adres2} onChange={(v) => update((d) => (d.customer.adres2 = v))} />
             </div>
             <Text label="Plaats, datum" value={c.plaatsdatum} onChange={(v) => update((d) => (d.customer.plaatsdatum = v))} placeholder="Utrecht, maandag 27 oktober 2025" />
-            <Text label="Aanhef" value={c.aanhef} onChange={(v) => update((d) => (d.customer.aanhef = v))} placeholder="Geachte heer …," />
+            <div>
+              <Label>Aanhef</Label>
+              <select
+                value={c.aanhef}
+                onChange={(e) => update((d) => (d.customer.aanhef = e.target.value))}
+                className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+              >
+                {!["Geachte heer/mevrouw,", "Geachte heer,", "Geachte mevrouw,"].includes(c.aanhef) && (
+                  <option value={c.aanhef}>{c.aanhef || "— kies —"}</option>
+                )}
+                <option value="Geachte heer/mevrouw,">Geachte heer/mevrouw,</option>
+                <option value="Geachte heer,">Geachte heer,</option>
+                <option value="Geachte mevrouw,">Geachte mevrouw,</option>
+              </select>
+            </div>
             <Text label="Referentie" value={c.referentie} onChange={(v) => update((d) => (d.customer.referentie = v))} />
             <div className="grid grid-cols-2 gap-2">
               <Text label="Contactpersoon" value={c.contact} onChange={(v) => update((d) => (d.customer.contact = v))} />

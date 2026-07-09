@@ -30,8 +30,10 @@ export interface BatteryOption {
   type: string;
   specs: BatterySpecs;
   photoUrl?: string;
-  prijs: Money; // headline "Prijs per Unit"
-  prijsInvest: Money; // value used in the investering table
+  inkoop?: Money; // purchase price per unit (cost)
+  margin?: number; // margin percent applied to inkoop
+  prijs: Money; // headline "Prijs per Unit" = total (inkoop + margin)
+  prijsInvest: Money; // value used in the investering table (kept equal to prijs)
 }
 
 export interface ChargerOption {

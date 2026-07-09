@@ -64,7 +64,16 @@ function specsFromProduct(p: CatalogProduct): { merk: string; type: string; spec
 export function productToBattery(p: CatalogProduct): BatteryOption {
   const { merk, type, specs } = specsFromProduct(p);
   const sell = sellCents(p.costPrice, p.margin);
-  return { merk, type, specs, photoUrl: p.photoUrl ?? undefined, prijs: sell, prijsInvest: sell };
+  return {
+    merk,
+    type,
+    specs,
+    photoUrl: p.photoUrl ?? undefined,
+    inkoop: p.costPrice,
+    margin: p.margin,
+    prijs: sell,
+    prijsInvest: sell,
+  };
 }
 
 /** Match a catalog product to an investering slot by name (falls back to seed default). */
@@ -203,10 +212,12 @@ export function deriveCostInputsOnSave(
   defaultMargin: number,
 ): CostInputs {
   const cols = data.batteries.slice(0, data.cols);
-  const batteryInvestCost =
-    prior && prior.batteryInvestCost.length === cols.length
-      ? prior.batteryInvestCost
-      : cols.map((b) => costFromSell(b.prijsInvest, defaultMargin));
+  // Prefer the per-battery purchase price (inkoop); fall back to prior snapshot or back-derivation.
+  const batteryInvestCost = cols.map((b, i) =>
+    b.inkoop != null
+      ? b.inkoop
+      : prior?.batteryInvestCost[i] ?? costFromSell(b.prijsInvest, defaultMargin),
+  );
   const sharedCost = prior?.sharedCost ?? costFromSell(sharedInvestering(data.investering), defaultMargin);
   return { batteryInvestCost, sharedCost };
 }

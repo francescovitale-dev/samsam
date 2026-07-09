@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ProposalDocument, type DocSettings } from "@/components/proposal/proposal-document";
 import type { BatteryOption, ProposalData, TemplateType } from "@/lib/proposal/types";
 import { BATTERY_SPEC_FIELDS } from "@/lib/proposal/spec-fields";
+import { formatEur } from "@/lib/money";
 import { statusLabel, statusClass } from "@/lib/status";
 import { saveProposal, setProposalStatus, duplicateProposal, deleteProposal } from "../actions";
 import { ChevronLeft, FileDown, Save, Calculator, ZoomIn, ZoomOut, Copy, Trash2 } from "lucide-react";
@@ -56,6 +57,31 @@ function Money({ label, cents, onCents }: { label: string; cents: number; onCent
             onCents(Math.round((parseFloat(e.target.value.replace(",", ".")) || 0) * 100));
           }}
         />
+      </div>
+    </div>
+  );
+}
+
+function Percent({ label, value, onValue }: { label: string; value: number; onValue: (v: number) => void }) {
+  const id = useId();
+  const [str, setStr] = useState(String(value ?? 0));
+  return (
+    <div>
+      <Label htmlFor={id}>{label}</Label>
+      <div className="relative">
+        <Input
+          id={id}
+          className="pr-6"
+          inputMode="decimal"
+          value={str}
+          onChange={(e) => {
+            setStr(e.target.value);
+            onValue(parseFloat(e.target.value.replace(",", ".")) || 0);
+          }}
+        />
+        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+          %
+        </span>
       </div>
     </div>
   );
@@ -239,8 +265,38 @@ export function ProposalBuilder({
                     <Text label="Type" value={b.type} onChange={(v) => update((d) => (d.batteries[i].type = v))} />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <Money label="Prijs per Unit" cents={b.prijs} onCents={(c2) => update((d) => (d.batteries[i].prijs = c2))} />
-                    <Money label="Prijs in tabel" cents={b.prijsInvest} onCents={(c2) => update((d) => (d.batteries[i].prijsInvest = c2))} />
+                    <Money
+                      label="Inkoopprijs per unit"
+                      cents={b.inkoop ?? 0}
+                      onCents={(c2) =>
+                        update((d) => {
+                          const bat = d.batteries[i];
+                          bat.inkoop = c2;
+                          const sell = Math.round(c2 * (1 + (bat.margin ?? 0) / 100));
+                          bat.prijs = sell;
+                          bat.prijsInvest = sell;
+                        })
+                      }
+                    />
+                    <Percent
+                      label="Marge"
+                      value={b.margin ?? 0}
+                      onValue={(m) =>
+                        update((d) => {
+                          const bat = d.batteries[i];
+                          bat.margin = m;
+                          const sell = Math.round((bat.inkoop ?? 0) * (1 + m / 100));
+                          bat.prijs = sell;
+                          bat.prijsInvest = sell;
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2 text-sm">
+                    <span className="text-muted-foreground">Totaalprijs per unit</span>
+                    <span className="font-semibold text-brand-teal">
+                      {formatEur(Math.round((b.inkoop ?? 0) * (1 + (b.margin ?? 0) / 100)))}
+                    </span>
                   </div>
                   <details className="rounded border">
                     <summary className="cursor-pointer list-none px-2 py-1 text-xs text-muted-foreground">

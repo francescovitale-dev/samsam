@@ -22,10 +22,15 @@ async function launch(): Promise<Browser> {
     });
   }
 
-  const chromium = (await import("@sparticuz/chromium")).default;
+  // Serverless (Vercel): @sparticuz/chromium-min keeps the function tiny and
+  // downloads the matching Chromium pack on cold start. The pack version MUST
+  // match the installed @sparticuz/chromium-min version.
+  const chromium = (await import("@sparticuz/chromium-min")).default;
+  const CHROMIUM_PACK =
+    "https://github.com/Sparticuz/chromium/releases/download/v147.0.0/chromium-v147.0.0-pack.x64.tar";
   return puppeteer.launch({
     args: chromium.args,
-    executablePath: await chromium.executablePath(),
+    executablePath: await chromium.executablePath(CHROMIUM_PACK),
     headless: true,
   });
 }

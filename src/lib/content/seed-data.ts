@@ -76,7 +76,7 @@ export const SEED_BATTERIES: SeedBattery[] = [
     type: "Fox G-Max 215",
     prijs: 37950,
     prijsInvest: 38350,
-    photoUrl: "/brand/bat-fox.png",
+    photoUrl: "/brand/bat-foxess.png",
     specs: {
       cooling: "Liquid",
       capaciteit: "215kWh",
@@ -163,15 +163,20 @@ function catalogSpecs(merk: string, type: string, vermogen: string, capaciteit: 
   };
 }
 
+const HUAWEI = "/brand/bat-huawei.png";
+const FOXESS = "/brand/bat-foxess.png";
+const MARS = "/brand/bat-mars.png";
+const MARS_BIG = "/brand/bat-generic.png";
+
 const REAL_BATTERIES = [
-  { merk: "Huawei", vermogen: "108", capaciteit: "215kWh" },
-  { merk: "Huawei", vermogen: "108", capaciteit: "241kWh" },
-  { merk: "FoxEss", vermogen: "100", capaciteit: "215kWh" },
-  { merk: "Mars", vermogen: "30", capaciteit: "100kWh" },
-  { merk: "Mars", vermogen: "50", capaciteit: "100kWh" },
-  { merk: "Mars", vermogen: "125", capaciteit: "261kWh" },
-  { merk: "Mars", vermogen: "250", capaciteit: "1023kWh" },
-  { merk: "Mars", vermogen: "500", capaciteit: "1013kWh" },
+  { merk: "Huawei", vermogen: "108", capaciteit: "215kWh", photoUrl: HUAWEI },
+  { merk: "Huawei", vermogen: "108", capaciteit: "241kWh", photoUrl: HUAWEI },
+  { merk: "FoxEss", vermogen: "100", capaciteit: "215kWh", photoUrl: FOXESS },
+  { merk: "Mars", vermogen: "30", capaciteit: "100kWh", photoUrl: MARS },
+  { merk: "Mars", vermogen: "50", capaciteit: "100kWh", photoUrl: MARS },
+  { merk: "Mars", vermogen: "125", capaciteit: "261kWh", photoUrl: MARS },
+  { merk: "Mars", vermogen: "250", capaciteit: "1023kWh", photoUrl: MARS_BIG },
+  { merk: "Mars", vermogen: "500", capaciteit: "1013kWh", photoUrl: MARS_BIG },
 ];
 
 const REAL_CHARGERS = [
@@ -187,6 +192,7 @@ export const SEED_CATALOG: SeedProduct[] = [
     margin: DEFAULT_MARGIN,
     unit: "st",
     specs: catalogSpecs(b.merk, `${b.vermogen}kW - ${b.capaciteit}`, b.vermogen, b.capaciteit),
+    photoUrl: b.photoUrl,
   })),
   { name: "Transportkosten en afval", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.transport), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
   { name: "ROEF verhogingsbalken", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.roef), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },

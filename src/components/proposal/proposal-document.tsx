@@ -99,11 +99,17 @@ export function ProposalDocument({
         <div className="cust">{c.naam}</div>
         <div className="subject">{c.onderwerp}</div>
         <div className="zk">
-          <div className="s">In samenwerking met</div>
-          <div className="z">
-            {s.company.partner}
-            <b> ⚡</b>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/zonneklaar.png"
+            alt="In samenwerking met Zonneklaar"
+            style={{
+              width: "52mm",
+              background: "#2b2f36",
+              padding: "10px 14px",
+              borderRadius: 10,
+            }}
+          />
         </div>
       </section>
 
@@ -169,6 +175,12 @@ export function ProposalDocument({
           &lsquo;one stop shop&rsquo; voor duurzame energieoplossingen. Van advies tot installatie, van
           subsidieaanvraag tot onderhoud — wij staan aan uw zijde in elke stap.
         </p>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/brand/installatie.png"
+          alt="SamSam installatie"
+          style={{ width: "100%", height: "42mm", objectFit: "cover", borderRadius: 12, margin: "4px 0" }}
+        />
         <div className="three-ico">
           {fix.partner.map((p, i) => (
             <div className="it" key={i}>
@@ -196,6 +208,25 @@ export function ProposalDocument({
         <div className="sidebox">{fix.kwaliteitBox}</div>
         <h3 style={{ marginTop: 18 }}>Meer dan 1000 groot-zakelijke projecten</h3>
         <p>{fix.duizend}</p>
+        <div style={{ marginTop: 8 }}>
+          <div
+            style={{
+              fontSize: 10.5,
+              color: "var(--grey)",
+              marginBottom: 8,
+              textTransform: "uppercase",
+              letterSpacing: ".5px",
+            }}
+          >
+            Onze partners &amp; referenties
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+            {["partner-hezelaer", "partner-eddygrid", "partner-repowered", "partner-epnl"].map((p) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={p} src={`/brand/${p}.png`} alt="" style={{ height: "11mm", objectFit: "contain" }} />
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* 5 — Comparison */}

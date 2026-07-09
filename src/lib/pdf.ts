@@ -11,8 +11,10 @@ async function launch(): Promise<Browser> {
   const ws = process.env.BROWSERLESS_URL;
   if (ws) return puppeteer.connect({ browserWSEndpoint: ws });
 
+  // A local Chrome path is only valid off-platform (dev). On Vercel always use
+  // @sparticuz/chromium, even if a stray CHROME_EXECUTABLE_PATH leaked into env.
   const localPath = process.env.CHROME_EXECUTABLE_PATH;
-  if (localPath) {
+  if (localPath && !process.env.VERCEL) {
     return puppeteer.launch({
       executablePath: localPath,
       headless: true,

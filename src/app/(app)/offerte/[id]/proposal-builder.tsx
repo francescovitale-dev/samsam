@@ -1,0 +1,391 @@
+"use client";
+
+import { useId, useState, useTransition } from "react";
+import Link from "next/link";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ProposalDocument, type DocSettings } from "@/components/proposal/proposal-document";
+import type { BatteryOption, ProposalData, TemplateType } from "@/lib/proposal/types";
+import { BATTERY_SPEC_FIELDS } from "@/lib/proposal/spec-fields";
+import { statusLabel, statusClass } from "@/lib/status";
+import { saveProposal } from "../actions";
+import { ChevronLeft, FileDown, Save, Send, Calculator, ZoomIn, ZoomOut } from "lucide-react";
+
+// ---- small field helpers ---------------------------------------------------
+
+function Text({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  const id = useId();
+  return (
+    <div>
+      <Label htmlFor={id}>{label}</Label>
+      <Input id={id} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
+function Money({ label, cents, onCents }: { label: string; cents: number; onCents: (c: number) => void }) {
+  const id = useId();
+  const [str, setStr] = useState(String(cents / 100));
+  return (
+    <div>
+      <Label htmlFor={id}>{label}</Label>
+      <div className="relative">
+        <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+          €
+        </span>
+        <Input
+          id={id}
+          className="pl-6"
+          inputMode="decimal"
+          value={str}
+          onChange={(e) => {
+            setStr(e.target.value);
+            onCents(Math.round((parseFloat(e.target.value.replace(",", ".")) || 0) * 100));
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Section({ title, children, open }: { title: string; children: React.ReactNode; open?: boolean }) {
+  return (
+    <details open={open} className="rounded-lg border bg-card">
+      <summary className="cursor-pointer list-none px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </summary>
+      <div className="space-y-3 border-t p-3">{children}</div>
+    </details>
+  );
+}
+
+// ---- builder ---------------------------------------------------------------
+
+export function ProposalBuilder({
+  proposalId,
+  number,
+  status,
+  initialData,
+  settings,
+  catalogBatteries,
+}: {
+  proposalId: string;
+  number: string;
+  status: string;
+  initialData: ProposalData;
+  settings: DocSettings;
+  catalogBatteries: { id: string; option: BatteryOption }[];
+}) {
+  const [data, setData] = useState<ProposalData>(initialData);
+  const [dirty, setDirty] = useState(false);
+  const [zoom, setZoom] = useState(0.55);
+  const [pending, start] = useTransition();
+
+  function update(mut: (d: ProposalData) => void) {
+    setData((prev) => {
+      const next = structuredClone(prev);
+      mut(next);
+      return next;
+    });
+    setDirty(true);
+  }
+
+  function save() {
+    start(async () => {
+      await saveProposal(proposalId, JSON.stringify(data));
+      setDirty(false);
+      toast.success("Offerte opgeslagen");
+    });
+  }
+
+  const c = data.customer;
+  const isCharger = data.templateType === "battery_charger";
+
+  return (
+    <div className="-m-6 flex h-[calc(100vh-0px)] flex-col">
+      {/* top bar */}
+      <div className="flex flex-wrap items-center gap-2 border-b bg-card px-4 py-2">
+        <Button render={<Link href="/" />} variant="ghost" size="sm" className="gap-1">
+          <ChevronLeft className="size-4" /> Terug
+        </Button>
+        <span className="font-mono text-sm font-medium">{number}</span>
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClass(status)}`}>
+          {statusLabel(status)}
+        </span>
+        {dirty && <span className="text-xs text-amber-600">• niet opgeslagen</span>}
+        <div className="ml-auto flex items-center gap-2">
+          <Button render={<Link href={`/offerte/${proposalId}/intern`} />} variant="outline" size="sm" className="gap-1">
+            <Calculator className="size-4" /> Intern
+          </Button>
+          <Button
+            render={<a href={`/offerte/${proposalId}/pdf`} target="_blank" rel="noreferrer" />}
+            variant="outline"
+            size="sm"
+            className="gap-1"
+          >
+            <FileDown className="size-4" /> PDF
+          </Button>
+          <Button
+            render={<Link href={`/offerte/${proposalId}/verzenden`} />}
+            variant="outline"
+            size="sm"
+            className="gap-1"
+          >
+            <Send className="size-4" /> Verzenden
+          </Button>
+          <Button
+            onClick={save}
+            disabled={pending}
+            size="sm"
+            className="gap-1 bg-brand-lime text-brand-lime-ink hover:bg-brand-lime/90"
+          >
+            <Save className="size-4" /> {pending ? "Bezig…" : "Opslaan"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex min-h-0 flex-1">
+        {/* form */}
+        <div className="w-[440px] shrink-0 space-y-3 overflow-auto border-r bg-muted/30 p-3">
+          <Section title="Klant" open>
+            <Text label="Bedrijfsnaam / klant" value={c.naam} onChange={(v) => update((d) => (d.customer.naam = v))} />
+            <div className="grid grid-cols-2 gap-2">
+              <Text label="Adres" value={c.adres1} onChange={(v) => update((d) => (d.customer.adres1 = v))} />
+              <Text label="Postcode + plaats" value={c.adres2} onChange={(v) => update((d) => (d.customer.adres2 = v))} />
+            </div>
+            <Text label="Plaats, datum" value={c.plaatsdatum} onChange={(v) => update((d) => (d.customer.plaatsdatum = v))} placeholder="Utrecht, maandag 27 oktober 2025" />
+            <Text label="Aanhef" value={c.aanhef} onChange={(v) => update((d) => (d.customer.aanhef = v))} placeholder="Geachte heer …," />
+            <Text label="Referentie" value={c.referentie} onChange={(v) => update((d) => (d.customer.referentie = v))} />
+            <div className="grid grid-cols-2 gap-2">
+              <Text label="Contactpersoon" value={c.contact} onChange={(v) => update((d) => (d.customer.contact = v))} />
+              <Text label="E-mail" value={c.email} onChange={(v) => update((d) => (d.customer.email = v))} />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Text label="Onderwerp" value={c.onderwerp} onChange={(v) => update((d) => (d.customer.onderwerp = v))} />
+              <Text label="Geldigheid" value={c.geldigheid} onChange={(v) => update((d) => (d.customer.geldigheid = v))} />
+            </div>
+          </Section>
+
+          <Section title="Template & ontwerp">
+            <div>
+              <Label>Template</Label>
+              <select
+                value={data.templateType}
+                onChange={(e) => update((d) => (d.templateType = e.target.value as TemplateType))}
+                className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+              >
+                <option value="battery">Batterij</option>
+                <option value="battery_charger">Batterij + lader</option>
+              </select>
+            </div>
+            <div>
+              <Label>Aantal kolommen</Label>
+              <select
+                value={data.cols}
+                onChange={(e) => update((d) => (d.cols = Number(e.target.value) as 1 | 2 | 3))}
+                className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+              >
+                {[1, 2, 3].map((n) => (
+                  <option key={n} value={n} disabled={n > data.batteries.length}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </Section>
+
+          <Section title="Batterijen" open>
+            {data.batteries.map((b, i) => (
+              <details key={i} className="rounded-md border bg-background">
+                <summary className="cursor-pointer list-none px-2 py-1.5 text-xs font-semibold text-brand-teal">
+                  Kolom {i + 1}: {b.merk} {b.type}
+                </summary>
+                <div className="space-y-2 border-t p-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Text label="Merk" value={b.merk} onChange={(v) => update((d) => (d.batteries[i].merk = v))} />
+                    <Text label="Type" value={b.type} onChange={(v) => update((d) => (d.batteries[i].type = v))} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Money label="Prijs per Unit" cents={b.prijs} onCents={(c2) => update((d) => (d.batteries[i].prijs = c2))} />
+                    <Money label="Prijs in tabel" cents={b.prijsInvest} onCents={(c2) => update((d) => (d.batteries[i].prijsInvest = c2))} />
+                  </div>
+                  <details className="rounded border">
+                    <summary className="cursor-pointer list-none px-2 py-1 text-xs text-muted-foreground">
+                      Alle specificaties
+                    </summary>
+                    <div className="grid grid-cols-2 gap-2 p-2">
+                      {BATTERY_SPEC_FIELDS.map((f) => (
+                        <Text
+                          key={f.key}
+                          label={f.label}
+                          value={String(b.specs[f.key as keyof typeof b.specs] ?? "")}
+                          onChange={(v) =>
+                            update((d) => {
+                              // sterren numeric, rest string
+                              (d.batteries[i].specs as unknown as Record<string, string | number>)[f.key] =
+                                f.kind === "number" ? parseFloat(v.replace(",", ".")) || 0 : v;
+                            })
+                          }
+                        />
+                      ))}
+                    </div>
+                  </details>
+                  {data.batteries.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() =>
+                        update((d) => {
+                          d.batteries.splice(i, 1);
+                          if (d.cols > d.batteries.length) d.cols = (d.batteries.length || 1) as 1 | 2 | 3;
+                        })
+                      }
+                    >
+                      Verwijder kolom
+                    </Button>
+                  )}
+                </div>
+              </details>
+            ))}
+            {data.batteries.length < 3 && catalogBatteries.length > 0 && (
+              <div>
+                <Label>Batterij toevoegen uit catalogus</Label>
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const found = catalogBatteries.find((x) => x.id === e.target.value);
+                    if (found)
+                      update((d) => {
+                        d.batteries.push(structuredClone(found.option));
+                        d.cols = Math.min(d.batteries.length, 3) as 1 | 2 | 3;
+                      });
+                  }}
+                  className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                >
+                  <option value="">Kies een batterij…</option>
+                  {catalogBatteries.map((x) => (
+                    <option key={x.id} value={x.id}>
+                      {x.option.merk} {x.option.type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </Section>
+
+          {isCharger && (
+            <Section title="Lader" open>
+              <div className="grid grid-cols-2 gap-2">
+                <Text
+                  label="Merk"
+                  value={data.charger?.merk ?? ""}
+                  onChange={(v) => update((d) => (d.charger = { ...(d.charger ?? { merk: "", type: "", prijs: 0 }), merk: v }))}
+                />
+                <Text
+                  label="Type"
+                  value={data.charger?.type ?? ""}
+                  onChange={(v) => update((d) => (d.charger = { ...(d.charger ?? { merk: "", type: "", prijs: 0 }), type: v }))}
+                />
+              </div>
+              <Text
+                label="Vermogen"
+                value={data.charger?.vermogen ?? ""}
+                onChange={(v) => update((d) => (d.charger = { ...(d.charger ?? { merk: "", type: "", prijs: 0 }), vermogen: v }))}
+              />
+              <Money
+                label="Prijs lader"
+                cents={data.charger?.prijs ?? 0}
+                onCents={(c2) => update((d) => (d.charger = { ...(d.charger ?? { merk: "", type: "", prijs: 0 }), prijs: c2 }))}
+              />
+            </Section>
+          )}
+
+          <Section title="Investering (prijstabel)">
+            <div className="grid grid-cols-2 gap-2">
+              <Money label="Transport en afval" cents={data.investering.transport} onCents={(v) => update((d) => (d.investering.transport = v))} />
+              <Money label="Grondwerk / ROEF" cents={data.investering.grondwerk} onCents={(v) => update((d) => (d.investering.grondwerk = v))} />
+              <Money label="Hekwerk" cents={data.investering.hekwerk} onCents={(v) => update((d) => (d.investering.hekwerk = v))} />
+              <Money label="PGS 37-1" cents={data.investering.pgs} onCents={(v) => update((d) => (d.investering.pgs = v))} />
+              <Money label="Keuring" cents={data.investering.keuring} onCents={(v) => update((d) => (d.investering.keuring = v))} />
+              <Money label="AC (stelpost)" cents={data.investering.ac} onCents={(v) => update((d) => (d.investering.ac = v))} />
+              <Money label="BPM (optioneel)" cents={data.investering.bpm} onCents={(v) => update((d) => (d.investering.bpm = v))} />
+              <Money label="EMS Smartbox" cents={data.investering.ems} onCents={(v) => update((d) => (d.investering.ems = v))} />
+            </div>
+          </Section>
+
+          <Section title="Werkzaamheden-pagina's">
+            <div className="grid grid-cols-2 gap-2">
+              <Money label="Grondwerk (stelpost)" cents={data.werkzaamheden.grondwerk} onCents={(v) => update((d) => (d.werkzaamheden.grondwerk = v))} />
+              <Money label="Hekwerk" cents={data.werkzaamheden.hekwerk} onCents={(v) => update((d) => (d.werkzaamheden.hekwerk = v))} />
+              <Money label="PGS 37-1" cents={data.werkzaamheden.pgs} onCents={(v) => update((d) => (d.werkzaamheden.pgs = v))} />
+              <Money label="Keuring" cents={data.werkzaamheden.keuring} onCents={(v) => update((d) => (d.werkzaamheden.keuring = v))} />
+              <Money label="AC (stelpost)" cents={data.werkzaamheden.ac} onCents={(v) => update((d) => (d.werkzaamheden.ac = v))} />
+              <Money label="Jaarlijks onderhoud" cents={data.werkzaamheden.onderhoud} onCents={(v) => update((d) => (d.werkzaamheden.onderhoud = v))} />
+              <Money label="EMS eenmalig" cents={data.werkzaamheden.emsEenmalig} onCents={(v) => update((d) => (d.werkzaamheden.emsEenmalig = v))} />
+              <Money label="EMS per maand" cents={data.werkzaamheden.emsPerMaand} onCents={(v) => update((d) => (d.werkzaamheden.emsPerMaand = v))} />
+            </div>
+          </Section>
+
+          <Section title="Jaarlijkse kosten + BTW">
+            <div className="grid grid-cols-2 gap-2">
+              <Money label="EMS jaarlijks" cents={data.jaarlijks.ems} onCents={(v) => update((d) => (d.jaarlijks.ems = v))} />
+              <Money label="Onderhoud jaarlijks" cents={data.jaarlijks.onderhoud} onCents={(v) => update((d) => (d.jaarlijks.onderhoud = v))} />
+              <div>
+                <Label>BTW %</Label>
+                <Input
+                  inputMode="decimal"
+                  value={String(data.btwRate)}
+                  onChange={(e) => update((d) => (d.btwRate = parseFloat(e.target.value.replace(",", ".")) || 0))}
+                />
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Notities (interne pagina 11)">
+            <Textarea
+              rows={4}
+              value={data.notes ?? ""}
+              onChange={(e) => update((d) => (d.notes = e.target.value))}
+              placeholder="Optionele opmerkingen op de jaarlijkse-kostenpagina"
+            />
+          </Section>
+        </div>
+
+        {/* preview */}
+        <div className="min-w-0 flex-1 overflow-auto bg-muted/50">
+          <div className="sticky top-0 z-10 flex items-center gap-2 border-b bg-card/80 px-3 py-1.5 backdrop-blur">
+            <span className="text-xs text-muted-foreground">Voorbeeld</span>
+            <div className="ml-auto flex items-center gap-1">
+              <Button variant="ghost" size="icon-sm" onClick={() => setZoom((z) => Math.max(0.3, z - 0.1))}>
+                <ZoomOut className="size-4" />
+              </Button>
+              <span className="w-10 text-center text-xs tabular-nums">{Math.round(zoom * 100)}%</span>
+              <Button variant="ghost" size="icon-sm" onClick={() => setZoom((z) => Math.min(1, z + 0.1))}>
+                <ZoomIn className="size-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="flex justify-center p-4">
+            <div style={{ zoom }}>
+              <ProposalDocument data={data} settings={settings} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

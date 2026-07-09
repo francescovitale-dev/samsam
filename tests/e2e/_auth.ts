@@ -13,7 +13,7 @@ export async function login(page: Page, email = "jimmy@samsam.nu") {
   await page.goto("/login");
   await page.getByLabel("E-mailadres").fill(email);
   await page.getByRole("button", { name: "Stuur inloglink" }).click();
-  await page.getByText("Check je e-mail").waitFor();
+  await page.getByRole("heading", { name: "Check je e-mail" }).waitFor();
 
   // Poll for a fresh link
   let url = "";

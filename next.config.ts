@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "*.public.blob.vercel-storage.com" }],
   },
+  // @sparticuz/chromium ships brotli-compressed binaries in bin/ that aren't
+  // reached by import tracing — force them into the PDF route's function bundle.
+  outputFileTracingIncludes: {
+    "/offerte/[id]/pdf": ["./node_modules/@sparticuz/chromium/bin/**"],
+  },
 };
 
 export default nextConfig;

@@ -34,13 +34,19 @@ export function AppNav() {
             key={it.href}
             href={it.href}
             className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
               active
                 ? "bg-brand-teal/10 text-brand-teal"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                : "text-muted-foreground hover:translate-x-0.5 hover:bg-muted hover:text-foreground",
             )}
           >
-            <Icon className="size-4" />
+            <span
+              className={cn(
+                "absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand-lime transition-all duration-300",
+                active ? "opacity-100" : "opacity-0 group-hover:opacity-40",
+              )}
+            />
+            <Icon className={cn("size-4 transition-transform duration-200", active && "scale-110")} />
             {it.label}
           </Link>
         );

@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/auth-guard";
 import { clearGateCookie } from "@/lib/gate";
 import { redirect } from "next/navigation";
 import { AppNav } from "@/components/app-nav";
+import { PageFade } from "@/components/page-fade";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 
@@ -27,7 +28,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
       <main className="flex-1 overflow-auto">
-        <div className="mx-auto max-w-6xl p-6">{children}</div>
+        <PageFade>{children}</PageFade>
       </main>
     </div>
   );

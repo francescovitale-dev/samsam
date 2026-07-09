@@ -5,6 +5,7 @@ import { statusLabel, statusClass } from "@/lib/status";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search } from "lucide-react";
+import { CountUp } from "@/components/count-up";
 import type { ProposalTotals } from "@/lib/proposal/types";
 
 export const dynamic = "force-dynamic";
@@ -42,11 +43,12 @@ export default async function Dashboard({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between animate-fade-up">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Offertes</h1>
           <p className="text-sm text-muted-foreground">
-            {proposals.length} offerte{proposals.length === 1 ? "" : "s"}
+            <CountUp value={proposals.length} className="font-semibold text-foreground" /> offerte
+            {proposals.length === 1 ? "" : "s"}
           </p>
         </div>
         <Button
@@ -101,8 +103,12 @@ export default async function Dashboard({
                 </td>
               </tr>
             )}
-            {proposals.map((p) => (
-              <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30">
+            {proposals.map((p, i) => (
+              <tr
+                key={p.id}
+                className="animate-fade-up border-b transition-colors last:border-0 hover:bg-brand-teal/5"
+                style={{ animationDelay: `${Math.min(i * 45, 400)}ms` }}
+              >
                 <td className="px-4 py-3 font-mono text-xs">
                   <Link href={`/offerte/${p.id}`} className="font-medium text-brand-teal hover:underline">
                     {p.number}

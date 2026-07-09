@@ -1,9 +1,7 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { isAuthed } from "@/lib/gate";
 
-/** Require an authenticated (allowlisted) user in a server component/action. */
+/** Guard a server component/action behind the shared-password gate. */
 export async function requireUser() {
-  const session = await auth();
-  if (!session?.user?.email) redirect("/login");
-  return session.user;
+  if (!(await isAuthed())) redirect("/login");
 }

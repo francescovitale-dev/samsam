@@ -12,7 +12,7 @@ import type { BatteryOption, ProposalData, TemplateType } from "@/lib/proposal/t
 import { BATTERY_SPEC_FIELDS } from "@/lib/proposal/spec-fields";
 import { statusLabel, statusClass } from "@/lib/status";
 import { saveProposal } from "../actions";
-import { ChevronLeft, FileDown, Save, Send, Calculator, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronLeft, FileDown, Save, Calculator, ZoomIn, ZoomOut } from "lucide-react";
 
 // ---- small field helpers ---------------------------------------------------
 
@@ -137,14 +137,6 @@ export function ProposalBuilder({
             className="gap-1"
           >
             <FileDown className="size-4" /> PDF
-          </Button>
-          <Button
-            render={<Link href={`/offerte/${proposalId}/verzenden`} />}
-            variant="outline"
-            size="sm"
-            className="gap-1"
-          >
-            <Send className="size-4" /> Verzenden
           </Button>
           <Button
             onClick={save}

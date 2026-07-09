@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { auth } from "@/auth";
+import { isAuthed } from "@/lib/gate";
 import { prisma } from "@/lib/prisma";
 import { renderUrlToPdf } from "@/lib/pdf";
 import { put } from "@vercel/blob";
@@ -8,8 +8,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
-  const session = await auth();
-  if (!session?.user?.email) return new Response("Unauthorized", { status: 401 });
+  if (!(await isAuthed())) return new Response("Unauthorized", { status: 401 });
 
   const { id } = await ctx.params;
   const proposal = await prisma.proposal.findUnique({ where: { id } });

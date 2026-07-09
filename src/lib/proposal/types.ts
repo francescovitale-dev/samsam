@@ -89,16 +89,20 @@ export interface JaarlijksLines {
 }
 
 export interface ProposalData {
-  templateType: TemplateType;
   design: string; // theme id, presentation only
   customer: CustomerBlock;
-  batteries: BatteryOption[]; // 1..3
-  charger?: ChargerOption; // present iff templateType === 'battery_charger'
-  cols: 1 | 2 | 3;
+  batteries: BatteryOption[]; // 1..N comparison options (client picks one via "Uw Keuze")
+  chargers: ChargerOption[]; // 0..M laders, included add-ons (summed into every column)
+  cols: number; // number of battery columns to show (= batteries.length)
   investering: CostLines;
   jaarlijks: JaarlijksLines;
   btwRate: number; // default 21
   notes?: string;
+}
+
+/** True when the offer includes one or more laders. */
+export function hasChargers(data: Pick<ProposalData, "chargers">): boolean {
+  return (data.chargers?.length ?? 0) > 0;
 }
 
 /**

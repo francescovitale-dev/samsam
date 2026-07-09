@@ -209,7 +209,6 @@ export const SEED_CATALOG: SeedProduct[] = [
 
 export function buildExampleProposalData(): ProposalData {
   return {
-    templateType: "battery",
     design: "modern",
     customer: { ...SEED_CUSTOMER },
     batteries: SEED_BATTERIES.map((b) => ({
@@ -220,6 +219,7 @@ export function buildExampleProposalData(): ProposalData {
       prijs: eur(b.prijs),
       prijsInvest: eur(b.prijsInvest),
     })),
+    chargers: [],
     cols: 3,
     investering: {
       transport: eur(SEED_INVESTERING.transport),

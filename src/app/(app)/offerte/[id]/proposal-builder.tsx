@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ProposalDocument, type DocSettings } from "@/components/proposal/proposal-document";
-import type { BatteryOption, ProposalData, TemplateType } from "@/lib/proposal/types";
+import type { BatteryOption, ChargerOption, ProposalData } from "@/lib/proposal/types";
 import { BATTERY_SPEC_FIELDS } from "@/lib/proposal/spec-fields";
 import { formatEur } from "@/lib/money";
 import { statusLabel, statusClass } from "@/lib/status";
@@ -106,6 +106,7 @@ export function ProposalBuilder({
   initialData,
   settings,
   catalogBatteries,
+  catalogChargers,
 }: {
   proposalId: string;
   number: string;
@@ -113,8 +114,13 @@ export function ProposalBuilder({
   initialData: ProposalData;
   settings: DocSettings;
   catalogBatteries: { id: string; option: BatteryOption }[];
+  catalogChargers: { id: string; option: ChargerOption }[];
 }) {
-  const [data, setData] = useState<ProposalData>(initialData);
+  const [data, setData] = useState<ProposalData>(() => ({
+    ...initialData,
+    chargers: initialData.chargers ?? [],
+    cols: initialData.cols || Math.max(initialData.batteries?.length ?? 1, 1),
+  }));
   const [dirty, setDirty] = useState(false);
   const [zoom, setZoom] = useState(0.55);
   const [pending, start] = useTransition();
@@ -138,7 +144,8 @@ export function ProposalBuilder({
   }
 
   const c = data.customer;
-  const isCharger = data.templateType === "battery_charger";
+  const isCharger = data.chargers.length > 0;
+  const MAX_COLUMNS = 8;
 
   return (
     <div className="-m-6 flex h-[calc(100vh-0px)] flex-col">
@@ -213,8 +220,9 @@ export function ProposalBuilder({
             </div>
             <Text label="Plaats, datum" value={c.plaatsdatum} onChange={(v) => update((d) => (d.customer.plaatsdatum = v))} placeholder="Utrecht, maandag 27 oktober 2025" />
             <div>
-              <Label>Aanhef</Label>
+              <Label htmlFor="aanhef-select">Aanhef</Label>
               <select
+                id="aanhef-select"
                 value={c.aanhef}
                 onChange={(e) => update((d) => (d.customer.aanhef = e.target.value))}
                 className="h-9 w-full rounded-md border bg-background px-2 text-sm"
@@ -238,35 +246,7 @@ export function ProposalBuilder({
             </div>
           </Section>
 
-          <Section title="Template & ontwerp">
-            <div>
-              <Label>Template</Label>
-              <select
-                value={data.templateType}
-                onChange={(e) => update((d) => (d.templateType = e.target.value as TemplateType))}
-                className="h-9 w-full rounded-md border bg-background px-2 text-sm"
-              >
-                <option value="battery">Batterij</option>
-                <option value="battery_charger">Batterij + lader</option>
-              </select>
-            </div>
-            <div>
-              <Label>Aantal kolommen</Label>
-              <select
-                value={data.cols}
-                onChange={(e) => update((d) => (d.cols = Number(e.target.value) as 1 | 2 | 3))}
-                className="h-9 w-full rounded-md border bg-background px-2 text-sm"
-              >
-                {[1, 2, 3].map((n) => (
-                  <option key={n} value={n} disabled={n > data.batteries.length}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </Section>
-
-          <Section title="Batterijen" open>
+          <Section title="Batterijen (opties om te vergelijken)" open>
             {data.batteries.map((b, i) => (
               <details key={i} className="rounded-md border bg-background">
                 <summary className="cursor-pointer list-none px-2 py-1.5 text-xs font-semibold text-brand-teal">
@@ -340,7 +320,7 @@ export function ProposalBuilder({
                       onClick={() =>
                         update((d) => {
                           d.batteries.splice(i, 1);
-                          if (d.cols > d.batteries.length) d.cols = (d.batteries.length || 1) as 1 | 2 | 3;
+                          d.cols = Math.max(d.batteries.length, 1);
                         })
                       }
                     >
@@ -350,7 +330,7 @@ export function ProposalBuilder({
                 </div>
               </details>
             ))}
-            {data.batteries.length < 3 && catalogBatteries.length > 0 && (
+            {data.batteries.length < MAX_COLUMNS && catalogBatteries.length > 0 && (
               <div>
                 <Label>Batterij toevoegen uit catalogus</Label>
                 <select
@@ -360,7 +340,7 @@ export function ProposalBuilder({
                     if (found)
                       update((d) => {
                         d.batteries.push(structuredClone(found.option));
-                        d.cols = Math.min(d.batteries.length, 3) as 1 | 2 | 3;
+                        d.cols = d.batteries.length;
                       });
                   }}
                   className="h-9 w-full rounded-md border bg-background px-2 text-sm"
@@ -372,36 +352,66 @@ export function ProposalBuilder({
                     </option>
                   ))}
                 </select>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Elke batterij is een kolom om te vergelijken (max {MAX_COLUMNS}).
+                </p>
               </div>
             )}
           </Section>
 
-          {isCharger && (
-            <Section title="Lader" open>
-              <div className="grid grid-cols-2 gap-2">
-                <Text
-                  label="Merk"
-                  value={data.charger?.merk ?? ""}
-                  onChange={(v) => update((d) => (d.charger = { ...(d.charger ?? { merk: "", type: "", prijs: 0 }), merk: v }))}
-                />
-                <Text
-                  label="Type"
-                  value={data.charger?.type ?? ""}
-                  onChange={(v) => update((d) => (d.charger = { ...(d.charger ?? { merk: "", type: "", prijs: 0 }), type: v }))}
-                />
+          <Section title="Laders (inbegrepen)" open>
+            {data.chargers.length === 0 && (
+              <p className="text-xs text-muted-foreground">Nog geen laders toegevoegd.</p>
+            )}
+            {data.chargers.map((ch, i) => (
+              <details key={i} className="rounded-md border bg-background">
+                <summary className="cursor-pointer list-none px-2 py-1.5 text-xs font-semibold text-brand-teal">
+                  Lader {i + 1}: {ch.merk} {ch.type}
+                </summary>
+                <div className="space-y-2 border-t p-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Text label="Merk" value={ch.merk} onChange={(v) => update((d) => (d.chargers[i].merk = v))} />
+                    <Text label="Type" value={ch.type} onChange={(v) => update((d) => (d.chargers[i].type = v))} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Text label="Vermogen" value={ch.vermogen ?? ""} onChange={(v) => update((d) => (d.chargers[i].vermogen = v))} />
+                    <Money label="Prijs lader" cents={ch.prijs} onCents={(c2) => update((d) => (d.chargers[i].prijs = c2))} />
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive"
+                    onClick={() => update((d) => d.chargers.splice(i, 1))}
+                  >
+                    Verwijder lader
+                  </Button>
+                </div>
+              </details>
+            ))}
+            {catalogChargers.length > 0 && (
+              <div>
+                <Label>Lader toevoegen uit catalogus</Label>
+                <select
+                  value=""
+                  onChange={(e) => {
+                    const found = catalogChargers.find((x) => x.id === e.target.value);
+                    if (found) update((d) => d.chargers.push(structuredClone(found.option)));
+                  }}
+                  className="h-9 w-full rounded-md border bg-background px-2 text-sm"
+                >
+                  <option value="">Kies een lader…</option>
+                  {catalogChargers.map((x) => (
+                    <option key={x.id} value={x.id}>
+                      {x.option.merk} {x.option.type}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Laders worden bij elke batterij-optie opgeteld in de prijs.
+                </p>
               </div>
-              <Text
-                label="Vermogen"
-                value={data.charger?.vermogen ?? ""}
-                onChange={(v) => update((d) => (d.charger = { ...(d.charger ?? { merk: "", type: "", prijs: 0 }), vermogen: v }))}
-              />
-              <Money
-                label="Prijs lader"
-                cents={data.charger?.prijs ?? 0}
-                onCents={(c2) => update((d) => (d.charger = { ...(d.charger ?? { merk: "", type: "", prijs: 0 }), prijs: c2 }))}
-              />
-            </Section>
-          )}
+            )}
+          </Section>
 
           <Section title="Investering (prijstabel)" open>
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-teal">Standaard</p>

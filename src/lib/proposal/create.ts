@@ -1,18 +1,9 @@
-import { sellCents, costFromSell, parseKwh } from "@/lib/money";
+import { sellCents, costFromSell } from "@/lib/money";
 import { SEED_JAARLIJKS, SEED_INVESTERING } from "@/lib/content/seed-data";
-import type { BatteryOption, BatterySpecs, CostInputs, ProposalData } from "./types";
+import type { BatteryOption, BatterySpecs, ChargerOption, CostInputs, ProposalData } from "./types";
 import { sharedInvestering } from "./compute";
 
 const eur = (n: number) => Math.round(n * 100);
-
-/**
- * Offer presets shown in "Nieuwe offerte". The two battery lines preload
- * catalog batteries by capacity; the charger line preloads a DC-lader.
- */
-export type OfferPreset = "battery_large" | "battery_small" | "battery_charger";
-
-/** kWh threshold splitting the large (241/261 kWh) line from the small (100 kWh) line. */
-const LARGE_KWH_THRESHOLD = 150;
 
 export interface CatalogProduct {
   id: string;
@@ -87,28 +78,15 @@ function invValue(products: CatalogProduct[], match: RegExp, fallbackEuros: numb
 export function buildInitialProposalData(
   customer: CustomerLike,
   catalog: CatalogProduct[],
-  preset: OfferPreset,
   design: string,
   btwRate: number,
   plaatsdatum: string,
 ): { data: ProposalData; costInputs: CostInputs } {
-  const templateType = preset === "battery_charger" ? "battery_charger" : "battery";
-
-  // Preload batteries by capacity line (falls back to all if the bucket is empty).
-  const allBatteries = catalog.filter((p) => p.category === "battery");
-  const isLarge = (p: CatalogProduct) =>
-    parseKwh(specsFromProduct(p).specs.capaciteit) >= LARGE_KWH_THRESHOLD;
-  let batteryProducts =
-    preset === "battery_small"
-      ? allBatteries.filter((p) => !isLarge(p))
-      : preset === "battery_large"
-        ? allBatteries.filter(isLarge)
-        : allBatteries;
-  if (batteryProducts.length === 0) batteryProducts = allBatteries;
-  batteryProducts = batteryProducts.slice(0, 3);
-
+  // Start with the first catalog battery as a single column; the user adds
+  // more batteries + laders directly in the builder.
+  const batteryProducts = catalog.filter((p) => p.category === "battery").slice(0, 1);
   const batteries = batteryProducts.map(productToBattery);
-  const cols = (Math.min(Math.max(batteries.length, 1), 3) || 1) as 1 | 2 | 3;
+  const cols = Math.max(batteries.length, 1);
 
   const address = (customer.address as { adres1?: string; adres2?: string } | null) ?? {};
 
@@ -124,24 +102,7 @@ export function buildInitialProposalData(
     ems: invValue(catalog, /smartbox|ems/i, SEED_INVESTERING.ems),
   };
 
-  const charger =
-    templateType === "battery_charger"
-      ? (() => {
-          const c = catalog.find((p) => p.category === "charger");
-          if (!c) return { merk: "DC", type: "Lader", prijs: 0 };
-          const { merk, type, specs } = specsFromProduct(c);
-          return {
-            merk,
-            type,
-            vermogen: specs.vermogen || undefined,
-            prijs: sellCents(c.costPrice, c.margin),
-            photoUrl: c.photoUrl ?? undefined,
-          };
-        })()
-      : undefined;
-
   const data: ProposalData = {
-    templateType,
     design,
     customer: {
       naam: customer.company,
@@ -156,7 +117,7 @@ export function buildInitialProposalData(
       aanhef: "Geachte heer/mevrouw,",
     },
     batteries,
-    charger,
+    chargers: [],
     cols,
     investering,
     jaarlijks: {
@@ -172,10 +133,21 @@ export function buildInitialProposalData(
 
   // Cost inputs for the internal margin view (real catalog costs).
   const batteryInvestCost = batteryProducts.map((p) => p.costPrice);
-  const chargerCost = charger ? costFromSell(charger.prijs, 15) : 0;
-  const sharedCost = sharedInvestering(deriveSharedCosts(catalog, investering)) + chargerCost;
+  const sharedCost = sharedInvestering(deriveSharedCosts(catalog, investering));
 
   return { data, costInputs: { batteryInvestCost, sharedCost } };
+}
+
+/** Convert a catalog charger product into a ChargerOption (for the lader picker). */
+export function productToCharger(p: CatalogProduct): ChargerOption {
+  const { merk, type, specs } = specsFromProduct(p);
+  return {
+    merk,
+    type,
+    vermogen: specs.vermogen || undefined,
+    prijs: sellCents(p.costPrice, p.margin),
+    photoUrl: p.photoUrl ?? undefined,
+  };
 }
 
 /** Cost side of the shared investering lines, matched from catalog. */

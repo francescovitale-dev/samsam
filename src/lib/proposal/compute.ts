@@ -32,9 +32,8 @@ export function sharedInvestering(inv: CostLines): number {
  */
 export function computeTotals(data: ProposalData, costs?: CostInputs): ProposalTotals {
   const shared = sharedInvestering(data.investering);
-  // The DC-lader (battery_charger template) is part of the one-time investment.
-  const chargerPrice =
-    data.templateType === "battery_charger" && data.charger ? data.charger.prijs : 0;
+  // Laders are included add-ons, summed into every battery column.
+  const chargerPrice = (data.chargers ?? []).reduce((sum, c) => sum + c.prijs, 0);
   const cols = data.batteries.slice(0, data.cols);
 
   const columns: ColumnTotals[] = cols.map((b, i) => {

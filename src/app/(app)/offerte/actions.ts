@@ -3,13 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth-guard";
 import { getSettings } from "@/lib/settings";
-import {
-  buildInitialProposalData,
-  deriveCostInputsOnSave,
-  type OfferPreset,
-} from "@/lib/proposal/create";
+import { buildInitialProposalData, deriveCostInputsOnSave } from "@/lib/proposal/create";
 import { computeTotals } from "@/lib/proposal/compute";
-import type { CostInputs, ProposalData } from "@/lib/proposal/types";
+import { hasChargers, type CostInputs, type ProposalData } from "@/lib/proposal/types";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -23,8 +19,6 @@ function todayPlaatsdatum(plaats = "Utrecht"): string {
   });
   return `${plaats}, ${date}`;
 }
-
-const VALID_PRESETS: OfferPreset[] = ["battery_large", "battery_small", "battery_charger"];
 
 async function nextProposalNumber(): Promise<string> {
   const year = new Date().getFullYear();
@@ -41,8 +35,6 @@ async function nextProposalNumber(): Promise<string> {
 export async function createProposal(formData: FormData) {
   await requireUser();
   const customerId = String(formData.get("customerId") || "");
-  const presetInput = String(formData.get("preset") || "battery_large") as OfferPreset;
-  const preset = VALID_PRESETS.includes(presetInput) ? presetInput : "battery_large";
   const design = String(formData.get("design") || "modern");
   if (!customerId) redirect("/offerte/nieuw?error=customer");
 
@@ -56,7 +48,6 @@ export async function createProposal(formData: FormData) {
   const { data, costInputs } = buildInitialProposalData(
     customer,
     catalog,
-    preset,
     design,
     settings.btwRate,
     todayPlaatsdatum(),
@@ -69,7 +60,7 @@ export async function createProposal(formData: FormData) {
     data: {
       number,
       customerId,
-      templateType: data.templateType,
+      templateType: hasChargers(data) ? "battery_charger" : "battery",
       design,
       status: "draft",
       validityDays: 14,
@@ -96,7 +87,7 @@ export async function saveProposal(id: string, dataJson: string) {
   await prisma.proposal.update({
     where: { id },
     data: {
-      templateType: data.templateType,
+      templateType: hasChargers(data) ? "battery_charger" : "battery",
       design: data.design,
       data: data as unknown as object,
       totals: totals as unknown as object,

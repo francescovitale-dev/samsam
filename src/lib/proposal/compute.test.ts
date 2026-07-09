@@ -39,13 +39,15 @@ describe("computeTotals — unified cost model", () => {
     expect(formatEur2(c.pricePerKwhCents)).toBe("€ 358,35");
   });
 
-  it("adds the DC-lader price to the total for the battery_charger template", () => {
+  it("adds all included laders to every battery column total", () => {
     const charged = buildExampleProposalData();
-    charged.templateType = "battery_charger";
-    charged.charger = { merk: "Autel", type: "240kW", prijs: 1_000_000 }; // € 10.000
+    charged.chargers = [
+      { merk: "Autel", type: "240kW", prijs: 1_000_000 }, // € 10.000
+      { merk: "Autel", type: "480kW", prijs: 500_000 }, // € 5.000
+    ];
     charged.cols = 1;
     const t = computeTotals(charged);
-    expect(formatEur(t.columns[0].exclBTW)).toBe("€ 87.045"); // 77.045 + 10.000
+    expect(formatEur(t.columns[0].exclBTW)).toBe("€ 92.045"); // 77.045 + 15.000
   });
 
   it("derives internal gross margin when cost inputs are supplied", () => {

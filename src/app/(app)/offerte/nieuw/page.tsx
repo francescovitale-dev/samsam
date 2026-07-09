@@ -58,29 +58,10 @@ export default async function NewProposalPage({
           </select>
         </div>
 
-        <div>
-          <Label htmlFor="preset">Template</Label>
-          <select
-            id="preset"
-            name="preset"
-            className="h-9 w-full rounded-md border bg-background px-2 text-sm"
-          >
-            <option value="battery_large">Batterij 241/261kWh</option>
-            <option value="battery_small">Batterij 100kWh</option>
-            <option value="battery_charger">Batterij + lader</option>
-          </select>
-        </div>
-
-        <div>
-          <Label htmlFor="design">Ontwerp</Label>
-          <select
-            id="design"
-            name="design"
-            className="h-9 w-full rounded-md border bg-background px-2 text-sm"
-          >
-            <option value="modern">Modern</option>
-          </select>
-        </div>
+        <input type="hidden" name="design" value="modern" />
+        <p className="text-sm text-muted-foreground">
+          Je kiest de batterijen en laders zelf in de volgende stap.
+        </p>
 
         <div className="flex justify-end gap-2">
           <Button render={<Link href="/" />} variant="outline">

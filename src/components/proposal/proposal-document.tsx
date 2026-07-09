@@ -79,7 +79,8 @@ export function ProposalDocument({
   const s = settings;
   const fix = settings.fixedCopy;
   const c = data.customer;
-  const isCharger = data.templateType === "battery_charger";
+  const chargers = data.chargers ?? [];
+  const isCharger = chargers.length > 0;
   const bs = data.batteries.slice(0, data.cols);
   const totals = computeTotals(data);
   const inv = data.investering;
@@ -254,11 +255,12 @@ export function ProposalDocument({
             <div key={i}>{formatEur(b.prijs)}</div>
           ))}
         </div>
-        {isCharger && data.charger && (
+        {chargers.map((ch, i) => (
           <div
+            key={i}
             className="mt"
             style={{
-              marginTop: 10,
+              marginTop: i === 0 ? 10 : 4,
               padding: "8px 14px",
               borderRadius: 10,
               background: "var(--teal)",
@@ -270,12 +272,12 @@ export function ProposalDocument({
             }}
           >
             <span>
-              <b>Inclusief DC-lader</b> — {data.charger.merk} {data.charger.type}
-              {data.charger.vermogen ? ` (${data.charger.vermogen})` : ""}
+              <b>Inclusief lader</b> — {ch.merk} {ch.type}
+              {ch.vermogen ? ` (${ch.vermogen})` : ""}
             </span>
-            <b>{formatEur(data.charger.prijs)}</b>
+            <b>{formatEur(ch.prijs)}</b>
           </div>
-        )}
+        ))}
         <div className="panel mt" style={{ fontSize: 11 }}>
           Onze ADR-gecertificeerde vervoerder levert de batterijen (ca. 3.000 kg per unit) veilig en
           zet ze direct op de fundatie. Restmateriaal nemen we meteen voor u mee.
@@ -357,9 +359,9 @@ export function ProposalDocument({
               ))}
             </tr>
             <RowPer label="Prijs batterijen" aantal="1" bs={bs} render={(b) => formatEur(b.prijsInvest)} />
-            {isCharger && data.charger && (
-              <RowShared label="DC-lader" cols={bs.length} value={formatEur(data.charger.prijs)} />
-            )}
+            {chargers.map((ch, i) => (
+              <RowShared key={i} label={`Lader — ${ch.merk} ${ch.type}`} cols={bs.length} value={formatEur(ch.prijs)} />
+            ))}
             <GroupRow cols={bs.length}>Standaard</GroupRow>
             <RowShared label="– Transportkosten en afval" cols={bs.length} value={formatEur(inv.transport)} />
             <RowShared label="– Fundatie / ROEF verhogingsbalken" cols={bs.length} value={formatEur(inv.roef)} />

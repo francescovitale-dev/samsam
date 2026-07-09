@@ -145,19 +145,58 @@ export interface SeedProduct {
   costPrice: number; // cents
   margin: number;
   unit: string;
-  specs?: BatterySpecs;
+  specs?: Record<string, string | number>;
   photoUrl?: string;
 }
 
+// Real SamSam product lineup. Prices start at € 0 — set them in Catalogus.
+function catalogSpecs(merk: string, type: string, vermogen: string, capaciteit: string) {
+  return {
+    merk,
+    type,
+    cooling: "",
+    capaciteit,
+    dod: "",
+    vermogen,
+    crate: "",
+    cycli: "",
+    eol: "",
+    totaalkwh: "",
+    rte: "",
+    garantieCellen: "",
+    garantiePCS: "",
+    garantieOverige: "",
+    balans: "",
+    levensduur: "",
+    bouwkwaliteit: "",
+    sterren: 0,
+  };
+}
+
+const REAL_BATTERIES = [
+  { merk: "Huawei", vermogen: "108", capaciteit: "215kWh" },
+  { merk: "Huawei", vermogen: "108", capaciteit: "241kWh" },
+  { merk: "FoxEss", vermogen: "100", capaciteit: "215kWh" },
+  { merk: "Mars", vermogen: "30", capaciteit: "100kWh" },
+  { merk: "Mars", vermogen: "50", capaciteit: "100kWh" },
+  { merk: "Mars", vermogen: "125", capaciteit: "261kWh" },
+  { merk: "Mars", vermogen: "250", capaciteit: "1023kWh" },
+  { merk: "Mars", vermogen: "500", capaciteit: "1013kWh" },
+];
+
+const REAL_CHARGERS = [
+  { merk: "Autel", vermogen: "240" },
+  { merk: "Autel", vermogen: "480" },
+];
+
 export const SEED_CATALOG: SeedProduct[] = [
-  ...SEED_BATTERIES.map((b) => ({
-    name: `${b.merk} ${b.type}`,
+  ...REAL_BATTERIES.map((b) => ({
+    name: `${b.merk} ${b.vermogen}kW - ${b.capaciteit}`,
     category: "battery" as const,
-    costPrice: costFromSell(eur(b.prijs), DEFAULT_MARGIN),
+    costPrice: 0,
     margin: DEFAULT_MARGIN,
     unit: "st",
-    specs: b.specs,
-    photoUrl: b.photoUrl,
+    specs: catalogSpecs(b.merk, `${b.vermogen}kW - ${b.capaciteit}`, b.vermogen, b.capaciteit),
   })),
   { name: "Transportkosten en afval", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.transport), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
   { name: "Fundatie / Grondwerk (stelpost)", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.grondwerk), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
@@ -167,18 +206,14 @@ export const SEED_CATALOG: SeedProduct[] = [
   { name: "AC Werkzaamheden (stelpost)", category: "work", costPrice: costFromSell(eur(SEED_INVESTERING.ac), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
   { name: "Extra BPM t.b.v. batterij (optioneel)", category: "option", costPrice: costFromSell(eur(SEED_INVESTERING.bpm), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
   { name: "EMS – SmartBox Power", category: "ems", costPrice: costFromSell(eur(SEED_INVESTERING.ems), DEFAULT_MARGIN), margin: DEFAULT_MARGIN, unit: "st" },
-  {
-    name: "Alfen DC 60kW",
-    category: "charger",
-    costPrice: costFromSell(eur(10000), DEFAULT_MARGIN),
+  ...REAL_CHARGERS.map((c) => ({
+    name: `${c.merk} ${c.vermogen}kW`,
+    category: "charger" as const,
+    costPrice: 0,
     margin: DEFAULT_MARGIN,
     unit: "st",
-    specs: {
-      cooling: "", capaciteit: "", dod: "", vermogen: "60 kW", crate: "", cycli: "", eol: "",
-      totaalkwh: "", rte: "", garantieCellen: "", garantiePCS: "", garantieOverige: "",
-      balans: "", levensduur: "", bouwkwaliteit: "", sterren: 0,
-    },
-  },
+    specs: catalogSpecs(c.merk, `${c.vermogen}kW`, `${c.vermogen} kW`, ""),
+  })),
 ];
 
 // ---- Example proposal (the prototype's "Voorbeeld") ------------------------

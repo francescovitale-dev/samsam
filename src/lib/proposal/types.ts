@@ -30,6 +30,7 @@ export interface BatteryOption {
   type: string;
   specs: BatterySpecs;
   photoUrl?: string;
+  aantal?: number; // quantity of this battery in the column (default 1)
   inkoop?: Money; // purchase price per unit (cost)
   margin?: number; // margin percent applied to inkoop
   prijs: Money; // headline "Prijs per Unit" = total (inkoop + margin)

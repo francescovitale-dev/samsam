@@ -37,16 +37,17 @@ export function computeTotals(data: ProposalData, costs?: CostInputs): ProposalT
   const cols = data.batteries.slice(0, data.cols);
 
   const columns: ColumnTotals[] = cols.map((b, i) => {
-    const exclBTW = b.prijsInvest + shared + chargerPrice;
+    const qty = Math.max(b.aantal ?? 1, 1);
+    const exclBTW = b.prijsInvest * qty + shared + chargerPrice;
     const btw = Math.round((exclBTW * data.btwRate) / 100);
     const inclBTW = exclBTW + btw;
-    const capacityKwh = parseKwh(b.specs.capaciteit);
+    const capacityKwh = parseKwh(b.specs.capaciteit) * qty; // total capacity for all units
     const pricePerKwhCents = capacityKwh > 0 ? Math.round(exclBTW / capacityKwh) : 0;
 
     const col: ColumnTotals = { exclBTW, btw, inclBTW, capacityKwh, pricePerKwhCents };
 
     if (costs) {
-      const cost = (costs.batteryInvestCost[i] ?? 0) + costs.sharedCost;
+      const cost = (costs.batteryInvestCost[i] ?? 0) * qty + costs.sharedCost;
       col.cost = cost;
       col.grossMargin = exclBTW - cost;
       col.grossMarginPct = cost > 0 ? ((exclBTW - cost) / cost) * 100 : 0;

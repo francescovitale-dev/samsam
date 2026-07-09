@@ -228,6 +228,12 @@ export function ProposalDocument({
                 <td key={i}>{b.type}</td>
               ))}
             </tr>
+            <tr>
+              <td className="lbl">Aantal</td>
+              {bs.map((b, i) => (
+                <td key={i}>{b.aantal ?? 1}×</td>
+              ))}
+            </tr>
             {BATTERY_SPEC_FIELDS.filter((f) => f.key !== "sterren").map((f) => (
               <tr key={f.key}>
                 <td className="lbl">{f.label}</td>
@@ -355,10 +361,20 @@ export function ProposalDocument({
                   {b.merk}
                   <br />
                   {b.type}
+                  {(b.aantal ?? 1) > 1 ? ` (${b.aantal}×)` : ""}
                 </th>
               ))}
             </tr>
-            <RowPer label="Prijs batterijen" aantal="1" bs={bs} render={(b) => formatEur(b.prijsInvest)} />
+            <RowPer
+              label="Prijs batterijen"
+              aantal=""
+              bs={bs}
+              render={(b) =>
+                (b.aantal ?? 1) > 1
+                  ? `${b.aantal}× ${formatEur(b.prijsInvest)}`
+                  : formatEur(b.prijsInvest)
+              }
+            />
             {chargers.map((ch, i) => (
               <RowShared key={i} label={`Lader — ${ch.merk} ${ch.type}`} cols={bs.length} value={formatEur(ch.prijs)} />
             ))}

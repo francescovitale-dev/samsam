@@ -257,6 +257,18 @@ export function ProposalBuilder({
                     <Text label="Merk" value={b.merk} onChange={(v) => update((d) => (d.batteries[i].merk = v))} />
                     <Text label="Type" value={b.type} onChange={(v) => update((d) => (d.batteries[i].type = v))} />
                   </div>
+                  <div>
+                    <Label htmlFor={`aantal-${i}`}>Aantal (stuks)</Label>
+                    <Input
+                      id={`aantal-${i}`}
+                      type="number"
+                      min={1}
+                      value={String(b.aantal ?? 1)}
+                      onChange={(e) =>
+                        update((d) => (d.batteries[i].aantal = Math.max(parseInt(e.target.value) || 1, 1)))
+                      }
+                    />
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <Money
                       label="Inkoopprijs per unit"
@@ -339,8 +351,16 @@ export function ProposalBuilder({
                     const found = catalogBatteries.find((x) => x.id === e.target.value);
                     if (found)
                       update((d) => {
-                        d.batteries.push(structuredClone(found.option));
-                        d.cols = d.batteries.length;
+                        // Same battery already added -> bump its quantity instead of a duplicate column
+                        const existing = d.batteries.find(
+                          (b) => b.merk === found.option.merk && b.type === found.option.type,
+                        );
+                        if (existing) {
+                          existing.aantal = (existing.aantal ?? 1) + 1;
+                        } else {
+                          d.batteries.push(structuredClone(found.option));
+                          d.cols = d.batteries.length;
+                        }
                       });
                   }}
                   className="h-9 w-full rounded-md border bg-background px-2 text-sm"

@@ -50,6 +50,16 @@ describe("computeTotals — unified cost model", () => {
     expect(formatEur(t.columns[0].exclBTW)).toBe("€ 92.045"); // 77.045 + 15.000
   });
 
+  it("multiplies battery price + capacity by aantal (quantity)", () => {
+    const d = buildExampleProposalData();
+    d.batteries = [{ ...d.batteries[0], aantal: 2 }];
+    d.cols = 1;
+    const t = computeTotals(d);
+    // 2× € 53.400 = € 106.800 + € 23.645 shared = € 130.445
+    expect(formatEur(t.columns[0].exclBTW)).toBe("€ 130.445");
+    expect(t.columns[0].capacityKwh).toBe(430); // 215 × 2
+  });
+
   it("derives internal gross margin when cost inputs are supplied", () => {
     const batteryInvestCost = data.batteries
       .slice(0, data.cols)

@@ -56,6 +56,7 @@ export function productToBattery(p: CatalogProduct): BatteryOption {
     type,
     specs,
     photoUrl: p.photoUrl ?? undefined,
+    aantal: 1,
     inkoop: p.costPrice,
     margin: p.margin,
     prijs: sell,
